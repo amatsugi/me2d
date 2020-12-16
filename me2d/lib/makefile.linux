@@ -1,0 +1,34 @@
+CXX = g++
+CXXFLAGS = -O2 -march=native -std=c++11 -Wall -Wextra -Wconversion -pedantic -fPIC -fopenmp
+
+# ---- LAPACK/BLAS library ----
+LDLAPACK = -lopenblas
+#LDLAPACK = -L$(MKLROOT)/lib/intel64 -Wl,--no-as-needed -lmkl_rt -lpthread -lm -ldl
+#LDLAPACK = -lblas -llapack -lgfortran -lm
+
+# ---- ARPACK library (left blank to disable arpack solver) ----
+LDARPACK = -larpack
+#LDARPACK =
+
+# ---- library for float128 (if needed) ----
+LDQUAD = -lquadmath
+
+
+LDFLAGS = $(LDARPACK) $(LDLAPACK) $(LDQUAD)
+DFLAGS =
+SHRFLAG = -shared
+
+SRCS = extlib.cc funcs.cc mesolver.cc mesingle.cc memulti.cc interface.cc
+HEADERS = defs.h extlib.h funcs.h mesolver.h mesingle.h memulti.h interface.h
+
+ifndef LDARPACK
+	DFLAGS += -DNO_ARPACK
+endif
+
+
+all: libme2d.so
+
+libme2d.so: $(SRCS) $(HEADERS)
+	$(CXX) $(CXXFLAGS) $(DFLAGS) $(SHRFLAG) $(SRCS) $(LDFLAGS) -o $@
+
+

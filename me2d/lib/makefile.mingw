@@ -1,0 +1,26 @@
+CXX = x86_64-w64-mingw32-g++
+CXXFLAGS = -O2 -march=native -std=c++11 -Wall -Wextra -Wconversion -pedantic -fPIC -fopenmp
+
+LDLAPACK = ../../local/mingw64-openblas0.3.10/lib/libopenblas.a
+LDARPACK = ../../local/mingw64-arpack3.7.0/lib/libarpack.a
+LDQUAD  = -lquadmath
+
+
+LDFLAGS = -static $(LDARPACK) $(LDLAPACK) -lstdc++ -lgcc -lgfortran -lgomp $(LDQUAD)
+DFLAGS =
+SHRFLAG = -shared
+
+SRCS = extlib.cc funcs.cc mesolver.cc mesingle.cc memulti.cc interface.cc
+HEADERS = defs.h extlib.h funcs.h mesolver.h mesingle.h memulti.h interface.h
+
+ifndef LDARPACK
+	DFLAGS += -DNO_ARPACK
+endif
+
+
+all: libme2d.dll
+
+libme2d.dll: $(SRCS) $(HEADERS)
+	$(CXX) $(CXXFLAGS) $(DFLAGS) $(SHRFLAG) $(SRCS) $(LDFLAGS) -o $@
+
+
