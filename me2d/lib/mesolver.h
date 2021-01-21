@@ -151,14 +151,16 @@ protected:
   }
   
   template<typename T> T nrm2(T *x) {
-    T one=1., scale=0., sumsq=1., absx;
+    T zero=0., one=1., scale=0., sumsq=1., absx;
     for (int64_t i=0; i<nsiz; i++) {
       absx = std::fabs(x[i]);
       if (scale < absx) {
         sumsq = one + sumsq * (scale/absx) * (scale/absx);
         scale = absx;
       }
-      else { sumsq += (absx/scale) * (absx/scale); }
+      else if (absx > zero) {
+        sumsq += (absx/scale) * (absx/scale);
+      }
     }
     return scale * std::sqrt(sumsq);
   }
