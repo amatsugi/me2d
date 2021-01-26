@@ -7,6 +7,7 @@ multiple-well master equations
 import sys, os, time
 import ctypes
 import numpy as np
+import scipy.linalg
 
 from . import __version__
 from . import constants
@@ -151,12 +152,12 @@ class MEBaseMW(object):
                 if all(x is None for x in self.channels[iwell]):
                     raise ValueError("isolated well: %s" % (self.names[iwell]))
 
-    def get_channel_strings(self, dis_only=True):
+    def get_channel_strings(self):
         kstrs = []
         for iwell in range(self.nwell):
             well = self.wells[iwell]
             for ich in range(well.nchan):
-                if dis_only and (self.channels[iwell][ich] is not None): continue
+                if self.channels[iwell][ich] is not None: continue
                 s = "%s-k%d" % (self.names[iwell], ich+1)
                 if self.channels[iwell][ich] is None: s += "(dis)"
                 else: s += "(to-%s)" % (self.names[self.channels[iwell][ich]])
@@ -166,8 +167,71 @@ class MEBaseMW(object):
             s = "x(%s)" % (self.names[iwell])
             xstrs.append(s)
         return kstrs, xstrs
-                
-    def hpl(self, T, dis_only=True):
+
+    def get_channel_strings_phnm(self):
+        dischl = []
+        for iwell in range(self.nwell):
+            well = self.wells[iwell]
+            for ich in range(well.nchan):
+                if self.channels[iwell][ich] is None:
+                    dischl.append("%s-ch.%d" % (self.names[iwell], ich+1))
+        kdstrl = [[] for x in dischl]
+        for i in range(len(dischl)):
+            for j in range(self.nwell):
+                kdstrl[i].append("%s->(%s)" % (self.names[j], dischl[i]))
+        kwstrl = [[] for i in range(self.nwell)]
+        for i in range(self.nwell):
+            jc = 0
+            for j in range(self.nwell):
+                if i == j: continue
+                kwstrl[i].append("%s<-%s" % (self.names[i], self.names[j]))
+        return kdstrl, kwstrl
+
+    def kphnm_from_ss(self, kll, popll):
+        """ phenomenological rate constants from steady-state solutions
+        kll: channel-specific overall decomposition rate constants in
+             the steady-state decomposition of wells
+        popll: steady-state populations during the steady-state
+               decomposition of wells
+        returns lists of the rate constants for dissociation and isomerization,
+        kdl and kwl, corresponding to kdstrl and kwstrl, respectively, of the
+        get_channel_strings_phnm() method
+        """
+        ndisch = len(kll[0])
+        G = np.zeros((self.nwell, self.nwell))
+        for i in range(self.nwell):
+            for j in range(self.nwell): G[i,j] = popll[i][j]
+        kdl = [np.zeros(self.nwell) for ich in range(ndisch)]
+        G_LU = scipy.linalg.lu_factor(G)
+        for i in range(ndisch):
+            kssl = np.zeros(self.nwell)
+            for j in range(self.nwell): kssl[j] = kll[j][i]
+            kdl[i] = scipy.linalg.lu_solve(G_LU, kssl)
+        
+        nm1 = self.nwell-1
+        GW = np.zeros((self.nwell*nm1, self.nwell*nm1))
+        dvec = np.zeros(self.nwell*nm1)
+        for i in range(self.nwell):
+            jc = 0
+            for j in range(self.nwell):
+                if i == j: continue
+                dvec[i*nm1+jc] = G[j][i] * sum(kdl[ich][i] for ich in range(ndisch))
+                kc = 0
+                for k in range(self.nwell):
+                    if k == i: continue
+                    GW[i*nm1+jc][i*nm1+kc] = G[j][k]
+                    ic = i
+                    if i > k: ic -= 1
+                    GW[i*nm1+jc][k*nm1+ic] = -G[j][i]
+                    kc += 1
+                jc += 1
+        GW_LU = scipy.linalg.lu_factor(GW)
+        kw_all = scipy.linalg.lu_solve(GW_LU, dvec)
+        kwl = [np.copy(kw_all[iwell*nm1:(iwell+1)*nm1]) for iwell in range(self.nwell)]
+        return kdl, kwl
+    
+    
+    def hpl(self, T):
         ga = self.rhoa * np.exp(- self.Ea * constants.cm2k / T)
         ga /= ga.sum()
         kdis = 0.
@@ -178,7 +242,7 @@ class MEBaseMW(object):
             ga_this = ga[self.posl[iwell]:self.posl[iwell]+self.nsizl[iwell]]
             popl.append(ga_this.sum())
             for ich in range(well.nchan):
-                if dis_only and (self.channels[iwell][ich] is not None): continue
+                if self.channels[iwell][ich] is not None: continue
                 k = (well.kchl[ich] * ga_this).sum()
                 kl.append(k)
                 if self.channels[iwell][ich] is None: # dissoc
@@ -187,7 +251,7 @@ class MEBaseMW(object):
 
 
     def solve(self, T, p, gguess=None, solver="", bandpcrit=1e-9, neig=1, reactant=None,
-              dis_only=True, verbose=False, nthreads=None, maxmemGB=None):
+              verbose=False, nthreads=None, maxmemGB=None):
         """ solve ME by calling solve1d or solve2d function of the library
         T: temperature in K
         p: pressure in bar
@@ -196,7 +260,6 @@ class MEBaseMW(object):
         bandpcrit: truncation threshold for banded matrix (None to use dense matrix)
         neig: number of eigenpairs to be computed
         reactant: name of the reactant well (only for InvIter solver for strady-state decomposition)
-        dis_only: output dissociation rates (if True) or all dissociation/internal rates (if False)
         verbose: verbose flag (True/False or integer)
         nthreads: number of threads to be used in the computation
         maxmemGB: max memory size used by the solver in GB
@@ -284,7 +347,7 @@ class MEBaseMW(object):
             ga_this = ga[self.posl[iwell]:self.posl[iwell]+self.nsizl[iwell]]
             popl.append(ga_this.sum())
             for ich in range(well.nchan):
-                if dis_only and (self.channels[iwell][ich] is not None): continue
+                if self.channels[iwell][ich] is not None: continue
                 k = (well.kchl[ich] * ga_this).sum()
                 kl.append(k)
                 if self.channels[iwell][ich] is None: # dissoc
