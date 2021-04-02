@@ -14,8 +14,9 @@ from . import constants
 
 
 def tunnel_eck(sums, dE, E0, deltaH0, freqimg):
-    """ Semiclassical correction for tunneling through Eckart potential
-    [Ref: B.C. Garrett and D.G. Truhlar, J. Phys. Chem. 83 (1979) 2921.]
+    """ One-dimensional correction for tunneling through Eckart potential
+    [Refs: C. Eckart, Phys. Rev. 35 (1930) 1303;
+           W. H. Miller, J. Am. Chem. Soc. 101 (1979) 6810.]
     arguments:
       sums: array, sum of states
       dE: energy train size
@@ -61,8 +62,9 @@ def tunnel_eck(sums, dE, E0, deltaH0, freqimg):
 
 
 def tunnel_eck_T(T, E0, deltaH0, freqimg, fE=50., fT=20.):
-    """ Semiclassical correction for tunneling through Eckart potential
-    [Ref: B.C. Garrett and D.G. Truhlar, J. Phys. Chem. 83 (1979) 2921.]
+    """ One-dimensional correction for tunneling through Eckart potential
+    [Refs: C. Eckart, Phys. Rev. 35 (1930) 1303;
+           B. C. Garrett and D. G. Truhlar, J. Phys. Chem. 83 (1979) 2921.]
     arguments:
       T: temperature(s)
       E0, deltaH0, freqimg: potential parameters

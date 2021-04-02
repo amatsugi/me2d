@@ -1,8 +1,9 @@
 # ME2D
 Python/C++ code for solving two-dimensional master equations of unimolecular reactions
 
-Reference
-  - [J. Phys. Chem. A 124(2020) 6645](https://doi.org/10.1021/acs.jpca.0c05906)
+References
+  - A. Matsugi, "Modeling Collisional Transitions in Thermal Unimolecular Reactions: Successive Trajectories and Two-Dimensional Master Equation for Trifluoromethane Decomposition in an Argon Bath," [J. Phys. Chem. A 124 (2020) 6645](https://doi.org/10.1021/acs.jpca.0c05906)
+  - A. Matsugi, "Two-Dimensional Master Equation Modeling of Some Multichannel Unimolecular Reactions," [J. Phys. Chem. A 125 (2021) 2532](https://doi.org/10.1021/acs.jpca.1c00666)
 
 ## Requirements
   - Python 3 with Numpy and Scipy packages
