@@ -43,7 +43,7 @@ class RoVib(object):
     def findrot(self, convK=True, convJ=True):
         freerot = []  # [(B, sigma, dimen), ...]
         hindrot = []  # [(B, sigma, hofreq, V0), ...]
-        if convK and (self.rotA is not None): 
+        if convK and (self.rotA is not None):
             freerot.append((self.rotA, 1, 1))
         if convJ and (self.rotB2D is not None):
             freerot.append((self.rotB2D, 1, 2))
@@ -290,6 +290,30 @@ def partfunc_rv(T, nsym, freq, freerot, hindrot, states):
     q /= float(nsym)
     return q
 
+
+def equilibrium_consts(T, rovib_reac, rovib_prod, deltaH0):
+    """ Equilibrium constants for unimolecular reactant and product """
+    T = np.atleast_1d(T)
+    qrovib_reac = rovib_reac.part(T)
+    qrovib_prod = rovib_prod.part(T)
+    keq = qrovib_prod / qrovib_reac * np.exp( - deltaH0 * constants.cm2k / T)
+    return keq
+
+def equilibrium_consts_12(T, rovib_reac, rovib_prod1, rovib_prod2,
+                          redmass, gelec_ratio, deltaH0):
+    """ Equilibrium constants for unimolecular reactant and bimolecular products, A => B + C.
+    redmass: reduced mass (m_B * m_C / m_A)
+    gelec_ratio: ratio of electronic degeneracy (gB * gC / gA)
+    """
+    T = np.atleast_1d(T)
+    qrovib_reac = rovib_reac.part(T)
+    qrovib_prod1 = rovib_prod1.part(T)
+    qrovib_prod2 = rovib_prod2.part(T)
+    conv = (2. * np.pi * constants.amu * constants.kb / constants.h / constants.h)**1.5 * 1e-6
+    qtrans_ratio = conv * redmass**1.5 * T**1.5
+    keq = qtrans_ratio * gelec_ratio * qrovib_prod1 * qrovib_prod2 / qrovib_reac \
+          * np.exp( - deltaH0 * constants.cm2k / T)
+    return keq
 
 
 def read_rovib_gaussian(fn):

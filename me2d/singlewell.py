@@ -36,8 +36,22 @@ class MEBase(object):
         """ virtual method reserved for strong-collider-in-J model """
         pass
     
-    def get_channel_strings(self):
-        return ["k%d[s-1]" % (ich+1) for ich in range(self.nchan)]
+    def get_channel_strings(self, name="k", unit="s-1"):
+        return ["%s%d[%s]" % (name, ich+1, unit) for ich in range(self.nchan)]
+    
+    #def k_chemical_activation(self, khpl, kcal, kdl):
+    #    """ phenomenological rate constants for chemical activation reactions
+    #    calculated from steady-state solutions
+    #    khpl: HPL bimolecular rate constant
+    #    kcal: apparent decomposition rate constants in the chemical activation steady state
+    #    kdl: decomposition rate constants
+    #    returns: kr(->recombination), kbl(->bimolecular products)
+    #    """
+    #    ndisch = len(kdl)
+    #    sumkcal = sum(kcal)
+    #    kr = khpl * sum(kdl) / sumkcal
+    #    kbl = [khpl * (kcal[i] - kdl[i]) / sumkcal for i in range(ndisch)]
+    #    return kr, kbl
     
     def hpl(self, T):
         self.set_k(None)
@@ -47,8 +61,8 @@ class MEBase(object):
         return (self.ka * ga).sum(), [(kch * ga).sum() for kch in self.kchl], ga
 
     
-    def solve(self, T, p, gguess=None, solver="", bandpcrit=1e-9, neig=1, verbose=False,
-              nthreads=None, maxmemGB=None):
+    def solve(self, T, p, gguess=None, solver="", bandpcrit=1e-9, neig=1,
+              chemact_ch=None, verbose=False, nthreads=None, maxmemGB=None):
         """ solve ME by calling solve1d or solve2d function of the library
         T: temperature in K
         p: pressure in bar
@@ -56,6 +70,7 @@ class MEBase(object):
         solver: see me2d.show_solvers()
         bandpcrit: truncation threshold for banded matrix (None to use dense matrix)
         neig: number of eigenpairs to be computed
+        chemact_ch: recombination channel (for chemical activation with solver=LinEq; gguess has to be None)
         verbose: verbose flag (True/False or integer)
         nthreads: number of threads to be used in the computation
         maxmemGB: max memory size used by the solver in GB
@@ -80,7 +95,8 @@ class MEBase(object):
                 logfp.write("Max memory size = %s GB\n" % (self.lib.get_me_maxmem_GB()))
             
             solverstr = solver
-            if bandpcrit >= 0: solverstr += " (banded, pcrit=%.1e)" % bandpcrit
+            if bandpcrit >= 0: solverstr += " (banded, pcrit=%.1e)" % (bandpcrit)
+            if chemact_ch is not None: solverstr += " (chemact_ch = %s)" % (chemact_ch)
             logfp.write("T=%.0f, p=%.2e, solver=%s\n" % (T, p, solverstr))
             logfp.flush()
             
@@ -95,6 +111,10 @@ class MEBase(object):
         elif verbose is False: verbose = 0
         
         if gguess is not None: vec = np.array(gguess)
+        elif chemact_ch is not None:
+            # chemical activation flux
+            vec = self.rhoa * np.exp(- self.Ea * constants.cm2k / T)
+            vec *= self.kchl[chemact_ch-1]
         else: vec = self.rhoa * np.exp(- self.Ea * constants.cm2k / T) # thermal distrib
         
         vals = np.zeros(neig)
@@ -123,7 +143,7 @@ class MEBase(object):
         k = (self.ka * ga).sum()
         kchl = [(kch * ga).sum() for kch in self.kchl]
         kdiff = abs((k - ksol) / k)
-        if kdiff > 0.01:
+        if (kdiff > 0.01) and (not solver.startswith("LinEq")):
             logfp.write("WARNING: |k-ksol|/|k| = %.2e (k=%.6e, ksol=%.6e)\n" % (kdiff, k, ksol))
             logfp.flush()
         return k, kchl, ga, vals, vec

@@ -14,7 +14,7 @@ public:
   static int64_t total_array_size;
   static int64_t total_array_size_used;
   enum me_type_t { Dens = 1, Band = 2, MW = 11, MWDens = Dens } me_type;
-  enum solver_t { InvIter = 1, EigIter = 2, Eigen = 3 } solver;
+  enum solver_t { InvIter = 1, EigIter = 2, Eigen = 3, LinEq = 4 } solver;
   enum linear_solver_t { LsCHO = 1, LsLU = 2, LsLDLT = 3, LsCG = 11 } linear_solver;
   enum eigen_solver_t { EsDSYEVR = 1 } eigen_solver;
   enum precond_t { PcDiag = 1, PcBand = 2 } preconditioner;
@@ -90,6 +90,7 @@ public:
 private:
   int inverse_iteration(double &val, double *ga);
   int eigen_iteration(int64_t neig, double *vals, double *z);
+  int linear_equation(double &val, double *ga);
   
   int linear_solver_init();
   int linear_solver_solve(double *b);

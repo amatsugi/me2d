@@ -8,7 +8,7 @@ Phenomenological rate constants from steady-state MEs
 (see Supporting Information of [A. Matsugi, J. Phys. Chem. A 125 (2021) 2532])
 
 sample output (c5h11_4a_me1d_E_phenomenological.dat):
-   T[K]    p[bar]    w1->(w1-ch.2)  w2->(w1-ch.2)  w1->(w2-ch.2)  w2->(w2-ch.2)         w1<-w2         w2<-w1
+   T[K]    p[bar]       w1->w1-ch2     w2->w1-ch2     w1->w2-ch2     w2->w2-ch2         w2->w1         w1->w2
   1000.0  1.000e+02     6.7929e+06     1.0100e+04     1.8738e+05     1.0491e+07     6.5773e+05     4.8258e+06
   1000.0  1.000e+01     5.1834e+06     3.5558e+04     6.8599e+05     7.7342e+06     5.0427e+05     3.7001e+06
   1000.0  1.000e+00     2.3900e+06     4.4524e+04     9.5277e+05     3.6551e+06     2.6458e+05     1.9470e+06

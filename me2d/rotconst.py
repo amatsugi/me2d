@@ -74,6 +74,7 @@ def internal_rotc(atoms, coordA, ipiv, itop, checktop=True):
     """
     if isinstance(itop, int): itop = find_top(atoms, coordA, ipiv, itop)
     if checktop: check_top(atoms, coordA, ipiv, itop)
+    print(itop)
     coord = [np.array(x)/(constants.bohr/constants.ang) for x in coordA]  # bohr
     weights = [constants.amass[x]/(constants.au/constants.amu) for x in atoms]
     coord = centerized(coord, weights)

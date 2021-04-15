@@ -14,7 +14,8 @@ interface for ME solvers
     int64_t nsiz: problem size
     int64_t neig: No. of eigenpairs to be calculated
     double *vals: [neig] (output) calculated eigenvalues
-    double *z: [neig*nsiz] (input for iterative solvers) guess, (output) eigenvectors
+    double *z: [neig*nsiz] (input for iterative solvers) guess,
+               (input for LinEq) flux vector, (output) eigenvectors
     double *Ea: [nsiz] total energies
     double *ea: [nsiz] (only in 2D) active energies (used in P(E,J;E',J'))
     double *Ja: [nsiz] (only in 2D) total angular momenta
@@ -36,7 +37,8 @@ interface for ME solvers
     int64_t *nsiz: [nwell] well sizes
     int64_t neig: No. of eigenpairs to be calculated
     double *vals: [neig] (output) calculated eigenvalues
-    double *z: [neig*sum(nsiz)] (input for iterative solvers) guess, (output) eigenvectors
+    double *z: [neig*sum(nsiz)] (input for iterative solvers) guess,
+               (input for LinEq) flux vector, (output) eigenvectors
     double *Ea: [sum(nsiz)] total energies
     double *ea: [sum(nsiz)] (only in 2D) active energies (used in P(E,J;E',J'))
     double *Ja: [sum(nsiz)] (only in 2D) total angular momenta

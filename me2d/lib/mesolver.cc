@@ -23,6 +23,7 @@ void MESolver::show_solvers() {
     - InvIter: inverse iteration with linear_solver
     - EigIter: iterative eigen solution (ARPACK, invert-mode with linear_solver)
     - Eigen: direct eigen solution with eigen_solver
+    - LinEq: solve linear problem with linear_solver
   linear_solver
     - CHO: Cholesky decomposition (LAPACK DPOTR[FS] or DPBTR[FS])
     - LU: LU decomposition (LAPACK DGETR[FS]; not supported for banded matrix)
@@ -72,6 +73,7 @@ int MESolver::set_solver(std::string solver_str) {
     if (keyeq(word, "InvIter")) { solver = InvIter; oss << ", inverse iteration"; }
     else if (keyeq(word, "EigIter")) { solver = EigIter; oss << ", iterative eigen solution (ARPACK)"; }
     else if (keyeq(word, "Eigen")) { solver = Eigen; oss << ", eigen solution";}
+    else if (keyeq(word, "LinEq")) { solver = LinEq; oss << ", linear equation";}
     else {
       cout << "ERROR: set_solver: invalid solver \"" + word + "\"" << endl;
       return ErrSolver;
@@ -79,7 +81,7 @@ int MESolver::set_solver(std::string solver_str) {
   }
   
   if (n <= 1) { // use default linear/eigen solvers 
-    if ((solver == InvIter) || (solver == EigIter)) {
+    if ((solver == InvIter) || (solver == EigIter) || (solver == LinEq)) {
       if (me_type == MW) { linear_solver = LsCG; oss << " with conjugate gradient"; }
       else { linear_solver = LsCHO; oss << " with Cholesky decomposition"; }
     }
@@ -87,7 +89,7 @@ int MESolver::set_solver(std::string solver_str) {
   }
   else { // words[1] specifies linear/eigen solvers
     word = words[1];
-    if ((solver == InvIter) || (solver == EigIter)) {
+    if ((solver == InvIter) || (solver == EigIter) || (solver == LinEq)) {
       if (keyeq(word, "CHO")) { linear_solver = LsCHO; oss << " with Cholesky decomposition"; }
       else if (keyeq(word, "LU")) { linear_solver = LsLU; oss << " with LU decomposition"; }
       else if (keyeq(word, "LDLT")) { linear_solver = LsLDLT; oss << " with LDLT decomposition"; }
@@ -107,7 +109,7 @@ int MESolver::set_solver(std::string solver_str) {
   
   // check if solver implemented
   if (me_type == Band) {
-    if ((solver == InvIter) || (solver == EigIter)) {
+    if ((solver == InvIter) || (solver == EigIter) || (solver == LinEq)) {
       if (linear_solver == LsLU) {
         cout << "ERROR: set_solver: banded LU solver not implemented" << endl;
         return ErrSolver;
@@ -127,7 +129,8 @@ int MESolver::set_solver(std::string solver_str) {
   
   // check if full matrix is needed for MW
   if (me_type == MW) {
-    if (((solver == InvIter) || (solver == EigIter)) && (linear_solver == LsCG)) {
+    if (((solver == InvIter) || (solver == EigIter) || (solver == LinEq))
+        && (linear_solver == LsCG)) {
       if (verbose > 0) { cout << "set_solver: the solver does not require full matrix." << endl; }
     }
     else {
@@ -164,7 +167,8 @@ int MESolver::set_solver_option(std::string option_str) {
         else if (keyeq(key, "rtol"))
           { Arpack_Tol = stod(val); oss << "Arpack_Tol set to " << Arpack_Tol; }
       }
-      if (((solver == InvIter) || (solver == EigIter)) && (linear_solver == LsCG)) {
+      if (((solver == InvIter) || (solver == EigIter) || (solver == LinEq))
+          && (linear_solver == LsCG)) {
         if (keyeq(key, "CG_maxit"))
           { CG_MaxIter = stoi(val); oss << "CG_MaxIter set to " << CG_MaxIter; }
         else if (keyeq(key, "CG_rtol"))
@@ -213,6 +217,7 @@ int MESolver::solve(int64_t neig, double *vals, double *z) {
   if (solver == InvIter) { res = inverse_iteration(vals[0], z); }
   else if (solver == EigIter) { res = eigen_iteration(neig, vals, z); }
   else if (solver == Eigen) { res = eigen_solve(neig, vals, z); }
+  else if (solver == LinEq) { res = linear_equation(vals[0], z); }
   else {
     cout << "ERROR: solve: solver " << solver << " not implemented." << endl;
     return ErrSolver;
@@ -392,6 +397,27 @@ int MESolver::eigen_iteration(int64_t neig, double *vals, double *z) {
   return 0;
 }
 
+
+// ---- linear equation ----
+
+int MESolver::linear_equation(double &val, double *b) {
+  int res;
+  
+  symmetrize_vector(b); normalize_vector(b);  // symmetrize source vector
+  invert_sign(); // invert sign to be positive definite
+  
+  if ((res = linear_solver_init()) < 0) { return res; }
+  res = linear_solver_solve(b);
+  if (res < 0) { return res; }
+  val = - 1. / normalize_vector(b);
+  linear_solver_clear();
+  
+  desymmetrize_vector(b); normalize_vector(b);
+  invert_sign();
+  
+  if (verbose > 0) { cout << "linear_equation: solved, val = " << val << endl; }
+  return 0;
+}
 
 // ---- linear solvers ----
 

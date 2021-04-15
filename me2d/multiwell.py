@@ -174,17 +174,17 @@ class MEBaseMW(object):
             well = self.wells[iwell]
             for ich in range(well.nchan):
                 if self.channels[iwell][ich] is None:
-                    dischl.append("%s-ch.%d" % (self.names[iwell], ich+1))
+                    dischl.append("%s-ch%d" % (self.names[iwell], ich+1))
         kdstrl = [[] for x in dischl]
         for i in range(len(dischl)):
             for j in range(self.nwell):
-                kdstrl[i].append("%s->(%s)" % (self.names[j], dischl[i]))
+                kdstrl[i].append("%s->%s" % (self.names[j], dischl[i]))
         kwstrl = [[] for i in range(self.nwell)]
         for i in range(self.nwell):
             jc = 0
             for j in range(self.nwell):
                 if i == j: continue
-                kwstrl[i].append("%s<-%s" % (self.names[i], self.names[j]))
+                kwstrl[i].append("%s->%s" % (self.names[j], self.names[i]))
         return kdstrl, kwstrl
 
     def kphnm_from_ss(self, kll, popll):
@@ -229,7 +229,57 @@ class MEBaseMW(object):
         kw_all = scipy.linalg.lu_solve(GW_LU, dvec)
         kwl = [np.copy(kw_all[iwell*nm1:(iwell+1)*nm1]) for iwell in range(self.nwell)]
         return kdl, kwl
-    
+
+    #def get_channel_strings_phnm_ca(self, chemact_well_ch):
+    #    chemact_well = chemact_well_ch[0]
+    #    chemact_ch = chemact_well_ch[1]
+    #    if chemact_well in self.names: chemact_well = self.names.index(chemact_well)
+    #    chemact = "%s-ch%d" % (self.names[chemact_well], chemact_ch)
+    #    dischl = []
+    #    for iwell in range(self.nwell):
+    #        well = self.wells[iwell]
+    #        for ich in range(well.nchan):
+    #            if self.channels[iwell][ich] is None:
+    #                dischl.append("%s-ch%d" % (self.names[iwell], ich+1))
+    #    krstrl = ["%s->%s" % (chemact, self.names[i]) for i in range(self.nwell)]
+    #    kbstrl = []
+    #    for x in dischl:
+    #        if x == chemact: kbstrl.append("%s(no-rxn)" % (chemact))
+    #        else: kbstrl.append("%s->%s" % (chemact, x))
+    #    
+    #    return krstrl, kbstrl
+    #
+    #def kphnm_from_cass(self, khpl, kl, popl, kdl, kwl):
+    #    """ phenomenological rate constants from chemical activation steady-state solution
+    #    khpl: HPL bimolecular rate constant
+    #    kl: channel-specific apparent decomposition rate constants in
+    #        the chemical activation steady state
+    #    popl: steady-state populations during the chemical activation steady state
+    #    kdl, kwl: outputs of kphnm_from_ss()
+    #    returns lists of the rate constants for reactant-to-well and reactant-to-fragments,
+    #    krl and kbl, corresponding to krstrl and kbstrl, respectively, of the
+    #    get_channel_strings_phnm_ca() method
+    #    """
+    #    ndisch = len(kl)
+    #    krl = [0. for i in range(self.nwell)]
+    #    kbl = [0. for i in range(ndisch)]
+    #    sumkl = sum(kl)
+    #    for j in range(self.nwell):
+    #        for i in range(self.nwell):
+    #            if i == j: continue
+    #            jc = j
+    #            ic = i
+    #            if j > i: jc -= 1
+    #            if i > j: ic -= 1
+    #            krl[j] += popl[j]*kwl[i][jc] - popl[i]*kwl[j][ic]
+    #        for l in range(ndisch): krl[j] += popl[j] * kdl[l][j]
+    #        krl[j] *= khpl / sumkl
+    #
+    #    for l in range(ndisch):
+    #        kbl[l] = kl[l]
+    #        for j in range(self.nwell): kbl[l] -= popl[j] * kdl[l][j]
+    #        kbl[l] *= khpl / sumkl
+    #    return krl, kbl
     
     def hpl(self, T):
         ga = self.rhoa * np.exp(- self.Ea * constants.cm2k / T)
@@ -250,7 +300,8 @@ class MEBaseMW(object):
         return kdis, kl, ga, popl
 
 
-    def solve(self, T, p, gguess=None, solver="", bandpcrit=1e-9, neig=1, reactant=None,
+    def solve(self, T, p, gguess=None, solver="", bandpcrit=1e-9, neig=1,
+              reactant=None, chemact_well_ch=None,
               verbose=False, nthreads=None, maxmemGB=None):
         """ solve ME by calling solve1d or solve2d function of the library
         T: temperature in K
@@ -260,6 +311,7 @@ class MEBaseMW(object):
         bandpcrit: truncation threshold for banded matrix (None to use dense matrix)
         neig: number of eigenpairs to be computed
         reactant: name of the reactant well (only for InvIter solver for strady-state decomposition)
+        chemact_well_ch: recombination (well-name, channel) (for chemical activation with solver=LinEq; gguess has to be None)
         verbose: verbose flag (True/False or integer)
         nthreads: number of threads to be used in the computation
         maxmemGB: max memory size used by the solver in GB
@@ -269,6 +321,10 @@ class MEBaseMW(object):
         if bandpcrit is None: bandpcrit = -1.
         if reactant is None: reactant = -1
         elif reactant in self.names: reactant = self.names.index(reactant)
+        if chemact_well_ch is not None:
+            chemact_well = chemact_well_ch[0]
+            chemact_ch = chemact_well_ch[1]
+            if chemact_well in self.names: chemact_well = self.names.index(chemact_well)
         
         if nthreads is not None: 
             max_threads_orig = get_num_threads()
@@ -289,6 +345,8 @@ class MEBaseMW(object):
             solverstr = solver
             if bandpcrit >= 0: solverstr += " (banded, pcrit=%.1e)" % (bandpcrit)
             if reactant >= 0: solverstr += " (reactant = %s)" % (self.names[reactant])
+            if chemact_well_ch is not None:
+                solverstr += " (chemact: well = %s, ch = %s)" % (self.names[chemact_well], chemact_ch)
             logfp.write("T=%.0f, p=%.2e, solver=%s\n" % (T, p, solverstr))
             logfp.flush()
         
@@ -304,6 +362,16 @@ class MEBaseMW(object):
         elif verbose is False: verbose = 0
         
         if gguess is not None: vec = np.array(gguess)
+        elif chemact_well_ch is not None:
+            # chemical activation flux
+            if self.channels[chemact_well][chemact_ch-1] is not None:
+                logfp.write("WARNING: THIS IS AN ISOMERIZATION CHANNEL!\n")
+                logfp.flush()
+            ga = self.rhoa * np.exp(- self.Ea * constants.cm2k / T)
+            ga_sel = ga[self.posl[chemact_well]:self.posl[chemact_well]+self.nsizl[chemact_well]]
+            flx = ga_sel * self.wells[chemact_well].kchl[chemact_ch-1]
+            vec = np.zeros(len(ga))
+            vec[self.posl[chemact_well]:self.posl[chemact_well]+self.nsizl[chemact_well]] = flx
         else: vec = self.rhoa * np.exp(- self.Ea * constants.cm2k / T) # thermal distrib
         
         vals = np.zeros(neig)
@@ -353,7 +421,7 @@ class MEBaseMW(object):
                 if self.channels[iwell][ich] is None: # dissoc
                     kdis += k
         kdiff = abs((kdis - ksol) / kdis)
-        if kdiff > 0.01:
+        if (kdiff > 0.01) and (not solver.startswith("LinEq")):
             logfp.write("WARNING: |kdis-ksol|/|kdis| = %.2e (kdis=%.6e, ksol=%.6e)\n"
                         % (kdiff, kdis, ksol))
             logfp.flush()

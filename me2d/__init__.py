@@ -1,9 +1,11 @@
 #! /usr/bin/env python3
 
-__version__ = "2020.12.16"
+__version__ = "2021.04.14"
 
 from .rovib import RoVib
 from .rovib import read_rovib
+from .rovib import equilibrium_consts
+from .rovib import equilibrium_consts_12
 
 from .rotconst import read_geom
 from .rotconst import external_rotc
@@ -18,6 +20,7 @@ from .rrkm import rrkmth
 from .rrkm import tstrates
 from .rrkm import cvtrates
 
+from .collfreq import name2weight
 from .collfreq import collfreq_hs
 from .collfreq import collfreq_capture
 from .collfreq import collfreq_lj
