@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-__version__ = "2021.04.14"
+__version__ = "2021.04.16"
 
 from .rovib import RoVib
 from .rovib import read_rovib

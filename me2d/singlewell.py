@@ -39,19 +39,19 @@ class MEBase(object):
     def get_channel_strings(self, name="k", unit="s-1"):
         return ["%s%d[%s]" % (name, ich+1, unit) for ich in range(self.nchan)]
     
-    #def k_chemical_activation(self, khpl, kcal, kdl):
-    #    """ phenomenological rate constants for chemical activation reactions
-    #    calculated from steady-state solutions
-    #    khpl: HPL bimolecular rate constant
-    #    kcal: apparent decomposition rate constants in the chemical activation steady state
-    #    kdl: decomposition rate constants
-    #    returns: kr(->recombination), kbl(->bimolecular products)
-    #    """
-    #    ndisch = len(kdl)
-    #    sumkcal = sum(kcal)
-    #    kr = khpl * sum(kdl) / sumkcal
-    #    kbl = [khpl * (kcal[i] - kdl[i]) / sumkcal for i in range(ndisch)]
-    #    return kr, kbl
+    def k_chemical_activation(self, khpl, kcal, kdl):
+        """ phenomenological rate constants for chemical activation reactions
+        calculated from steady-state solutions
+        khpl: HPL bimolecular rate constant
+        kcal: apparent decomposition rate constants in the chemical activation steady state
+        kdl: decomposition rate constants
+        returns: kr(->recombination), kbl(->bimolecular products)
+        """
+        ndisch = len(kdl)
+        sumkcal = sum(kcal)
+        kr = khpl * sum(kdl) / sumkcal
+        kbl = [khpl * (kcal[i] - kdl[i]) / sumkcal for i in range(ndisch)]
+        return kr, kbl
     
     def hpl(self, T):
         self.set_k(None)

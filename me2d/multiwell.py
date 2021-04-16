@@ -230,56 +230,56 @@ class MEBaseMW(object):
         kwl = [np.copy(kw_all[iwell*nm1:(iwell+1)*nm1]) for iwell in range(self.nwell)]
         return kdl, kwl
 
-    #def get_channel_strings_phnm_ca(self, chemact_well_ch):
-    #    chemact_well = chemact_well_ch[0]
-    #    chemact_ch = chemact_well_ch[1]
-    #    if chemact_well in self.names: chemact_well = self.names.index(chemact_well)
-    #    chemact = "%s-ch%d" % (self.names[chemact_well], chemact_ch)
-    #    dischl = []
-    #    for iwell in range(self.nwell):
-    #        well = self.wells[iwell]
-    #        for ich in range(well.nchan):
-    #            if self.channels[iwell][ich] is None:
-    #                dischl.append("%s-ch%d" % (self.names[iwell], ich+1))
-    #    krstrl = ["%s->%s" % (chemact, self.names[i]) for i in range(self.nwell)]
-    #    kbstrl = []
-    #    for x in dischl:
-    #        if x == chemact: kbstrl.append("%s(no-rxn)" % (chemact))
-    #        else: kbstrl.append("%s->%s" % (chemact, x))
-    #    
-    #    return krstrl, kbstrl
-    #
-    #def kphnm_from_cass(self, khpl, kl, popl, kdl, kwl):
-    #    """ phenomenological rate constants from chemical activation steady-state solution
-    #    khpl: HPL bimolecular rate constant
-    #    kl: channel-specific apparent decomposition rate constants in
-    #        the chemical activation steady state
-    #    popl: steady-state populations during the chemical activation steady state
-    #    kdl, kwl: outputs of kphnm_from_ss()
-    #    returns lists of the rate constants for reactant-to-well and reactant-to-fragments,
-    #    krl and kbl, corresponding to krstrl and kbstrl, respectively, of the
-    #    get_channel_strings_phnm_ca() method
-    #    """
-    #    ndisch = len(kl)
-    #    krl = [0. for i in range(self.nwell)]
-    #    kbl = [0. for i in range(ndisch)]
-    #    sumkl = sum(kl)
-    #    for j in range(self.nwell):
-    #        for i in range(self.nwell):
-    #            if i == j: continue
-    #            jc = j
-    #            ic = i
-    #            if j > i: jc -= 1
-    #            if i > j: ic -= 1
-    #            krl[j] += popl[j]*kwl[i][jc] - popl[i]*kwl[j][ic]
-    #        for l in range(ndisch): krl[j] += popl[j] * kdl[l][j]
-    #        krl[j] *= khpl / sumkl
-    #
-    #    for l in range(ndisch):
-    #        kbl[l] = kl[l]
-    #        for j in range(self.nwell): kbl[l] -= popl[j] * kdl[l][j]
-    #        kbl[l] *= khpl / sumkl
-    #    return krl, kbl
+    def get_channel_strings_phnm_ca(self, chemact_well_ch):
+        chemact_well = chemact_well_ch[0]
+        chemact_ch = chemact_well_ch[1]
+        if chemact_well in self.names: chemact_well = self.names.index(chemact_well)
+        chemact = "%s-ch%d" % (self.names[chemact_well], chemact_ch)
+        dischl = []
+        for iwell in range(self.nwell):
+            well = self.wells[iwell]
+            for ich in range(well.nchan):
+                if self.channels[iwell][ich] is None:
+                    dischl.append("%s-ch%d" % (self.names[iwell], ich+1))
+        krstrl = ["%s->%s" % (chemact, self.names[i]) for i in range(self.nwell)]
+        kbstrl = []
+        for x in dischl:
+            if x == chemact: kbstrl.append("%s(no-rxn)" % (chemact))
+            else: kbstrl.append("%s->%s" % (chemact, x))
+        
+        return krstrl, kbstrl
+    
+    def kphnm_from_cass(self, khpl, kl, popl, kdl, kwl):
+        """ phenomenological rate constants from chemical activation steady-state solution
+        khpl: HPL bimolecular rate constant
+        kl: channel-specific apparent decomposition rate constants in
+            the chemical activation steady state
+        popl: steady-state populations during the chemical activation steady state
+        kdl, kwl: outputs of kphnm_from_ss()
+        returns lists of the rate constants for reactant-to-well and reactant-to-fragments,
+        krl and kbl, corresponding to krstrl and kbstrl, respectively, of the
+        get_channel_strings_phnm_ca() method
+        """
+        ndisch = len(kl)
+        krl = [0. for i in range(self.nwell)]
+        kbl = [0. for i in range(ndisch)]
+        sumkl = sum(kl)
+        for j in range(self.nwell):
+            for i in range(self.nwell):
+                if i == j: continue
+                jc = j
+                ic = i
+                if j > i: jc -= 1
+                if i > j: ic -= 1
+                krl[j] += popl[j]*kwl[i][jc] - popl[i]*kwl[j][ic]
+            for l in range(ndisch): krl[j] += popl[j] * kdl[l][j]
+            krl[j] *= khpl / sumkl
+    
+        for l in range(ndisch):
+            kbl[l] = kl[l]
+            for j in range(self.nwell): kbl[l] -= popl[j] * kdl[l][j]
+            kbl[l] *= khpl / sumkl
+        return krl, kbl
     
     def hpl(self, T):
         ga = self.rhoa * np.exp(- self.Ea * constants.cm2k / T)
