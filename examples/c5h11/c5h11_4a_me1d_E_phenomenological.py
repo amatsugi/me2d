@@ -5,7 +5,7 @@ Thermal decomposition in the n-,s-C5H11 system
 (two-well, two-channel, 1D ME as a function of E)
 
 Phenomenological rate constants from steady-state MEs
-(see Supporting Information of [A. Matsugi, J. Phys. Chem. A 125 (2021) 2532])
+(see Supporting Information of [J. Phys. Chem. A 125 (2021) 2532])
 
 sample output (c5h11_4a_me1d_E_phenomenological.dat):
    T[K]    p[bar]       w1->w1-ch2     w2->w1-ch2     w1->w2-ch2     w2->w2-ch2         w2->w1         w1->w2

@@ -2,7 +2,6 @@
 
 """
 RRKM calculation for CHF3 => CF2 + HF
-[Ref: A. Matsugi, J. Phys. Chem. A 124 (2020) 6645.]
 
 This code generates chf3_1_rrkmE_dE10.dat and chf3_1_rrkmEJ_dE50.dat files
 for 1D and 2D ME calculations, respectively.
