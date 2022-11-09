@@ -299,20 +299,19 @@ def equilibrium_consts(T, rovib_reac, rovib_prod, deltaH0):
     keq = qrovib_prod / qrovib_reac * np.exp( - deltaH0 * constants.cm2k / T)
     return keq
 
-def equilibrium_consts_12(T, rovib_reac, rovib_prod1, rovib_prod2,
-                          redmass, gelec_ratio, deltaH0):
+def equilibrium_consts_dissoc(T, rovib_reac, rovib_prod1, rovib_prod2, gelec_reac, gelec_prod1, gelec_prod2,
+                              m_prod1, m_prod2, deltaH0):
     """ Equilibrium constants for unimolecular reactant and bimolecular products, A => B + C.
-    redmass: reduced mass (m_B * m_C / m_A)
-    gelec_ratio: ratio of electronic degeneracy (gB * gC / gA)
+    m_prod[12]: molecular weight [amu] of B and C
+    gelec_[reac|prod[12]]: electronic degeneracy of A, B and C
     """
     T = np.atleast_1d(T)
-    qrovib_reac = rovib_reac.part(T)
-    qrovib_prod1 = rovib_prod1.part(T)
-    qrovib_prod2 = rovib_prod2.part(T)
+    redmass = m_prod1 * m_prod2 / (m_prod1 + m_prod2)
     conv = (2. * np.pi * constants.amu * constants.kb / constants.h / constants.h)**1.5 * 1e-6
     qtrans_ratio = conv * redmass**1.5 * T**1.5
-    keq = qtrans_ratio * gelec_ratio * qrovib_prod1 * qrovib_prod2 / qrovib_reac \
-          * np.exp( - deltaH0 * constants.cm2k / T)
+    qelec_ratio = gelec_prod1 * gelec_prod2 / gelec_reac
+    qrovib_ratio = rovib_prod1.part(T) * rovib_prod2.part(T) / rovib_reac.part(T)
+    keq = qtrans_ratio * qelec_ratio *  qrovib_ratio * np.exp( - deltaH0 * constants.cm2k / T)
     return keq
 
 

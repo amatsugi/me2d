@@ -9,8 +9,11 @@ RRKM program
 import os, sys, time
 import numpy as np
 
-from .rovib import RoVib
 from . import constants
+from .rovib import RoVib
+from .utils import findmin
+from .tst import tstrates
+from .tst import cvtrates
 
 
 def tunnel_eck(sums, dE, E0, deltaH0, freqimg):
@@ -59,73 +62,6 @@ def tunnel_eck(sums, dE, E0, deltaH0, freqimg):
         sums[ncritDH0+i] = (pc * rhode[:nc]).sum()
     
     return sums
-
-
-def tunnel_eck_T(T, E0, deltaH0, freqimg, fE=50., fT=20.):
-    """ One-dimensional correction for tunneling through Eckart potential
-    [Refs: C. Eckart, Phys. Rev. 35 (1930) 1303;
-           B. C. Garrett and D. G. Truhlar, J. Phys. Chem. 83 (1979) 2921.]
-    arguments:
-      T: temperature(s)
-      E0, deltaH0, freqimg: potential parameters
-      fE: integration grain size = kB*min(T) / fE
-      fT: integration upper limit = E0 + kB*max(T)*fT
-    """
-    T = np.atleast_1d(T)
-    Bv = (np.sqrt(E0) + np.sqrt(E0-deltaH0))**2
-    alpha_hb = freqimg * np.sqrt(Bv / (2.*E0*(E0-deltaH0)))
-    tmpabd = 2. * np.pi * np.sqrt(2.) / alpha_hb
-    d = tmpabd * np.sqrt(Bv - 0.5 * (alpha_hb/2.)**2)
-
-    dEint = min(T) / constants.cm2k / fE
-    Emin = max(0., deltaH0)
-    Emax = E0 + max(T) / constants.cm2k * fT
-    Ec = np.arange(Emin, Emax, dEint, dtype=float)
-    a = tmpabd * np.sqrt(Ec)
-    b = tmpabd * np.sqrt(Ec-deltaH0)
-    ex2a, ex2b = np.exp(-2.*a), np.exp(-2.*b)
-    ex2ab = ex2a*ex2b
-    ptran = (1. + ex2ab - ex2a - ex2b) \
-            / (1. + ex2ab + np.exp(d-(a+b)) + np.exp(-d-(a+b)))
-    
-    corr = np.ones(len(T))
-    for i in range(len(T)):
-        intg = (ptran * np.exp(-Ec * constants.cm2k / T[i])).sum() * dEint
-        corr[i] = intg / (T[i] / constants.cm2k)  / np.exp(-E0 * constants.cm2k / T[i])
-    return corr
-
-
-
-def tstrates(T, rovibm, rovibcl, E0l, deltaH0l, convK=True, convJ=True):
-    """ thermal rate constants from transition state theory """
-    T = np.atleast_1d(T)
-    nchan = len(rovibcl)
-    qm = rovibm.part(T, convK=convK, convJ=convJ)
-    kl = []
-    for ich in range(nchan):
-        E0, deltaH0, rovibc = E0l[ich], deltaH0l[ich], rovibcl[ich]
-        qc = rovibc.part(T, convK=convK, convJ=convJ)
-        k = (constants.kb * T / constants.h) * (qc / qm) * \
-            np.exp(- E0 * constants.cm2k / T)
-        if ((rovibc.freqimg is not None) and (deltaH0 is not None)
-            and (E0 > deltaH0)):
-            k *= tunnel_eck_T(T, E0, deltaH0, rovibc.freqimg)
-        kl.append(k)
-    return kl
-
-
-def cvtrates(T, rovibm, rovibcl, E0l, deltaH0l, rcoordl, convK=True, convJ=True):
-    """ thermal rate constants from canonical variational transition state theory """
-    T = np.atleast_1d(T)
-    ktstl = tstrates(T, rovibm, rovibcl, E0l, deltaH0l, convK=convK, convJ=convJ)
-    kv = np.zeros(len(T))
-    rv = np.zeros(len(T))
-    for iT in range(len(T)):
-        ktstv = [ktst[iT] for ktst in ktstl]
-        rmin, kmin = findmin(rcoordl, ktstv)
-        kv[iT] = kmin
-        rv[iT] = rmin
-    return ktstl, kv, rv
 
 
 def numrates(T, rho, kEl, Ea):
@@ -344,28 +280,6 @@ def rrkmEJ(maxE, dE, maxJ, rovibm, rovibcl, E0l, deltaH0l, rotB2Dprodl,
 
     return offsetl, rhol, kll
 
-
-
-def findmin(x, y):
-    minind = list(y).index(min(y))
-    if minind == 0:
-        x1, x2, x3 = x[minind], x[minind+1], x[minind+2]
-        y1, y2, y3 = y[minind], y[minind+1], y[minind+2]
-    elif minind == len(x)-1:
-        x1, x2, x3 = x[minind-2], x[minind-1], x[minind]
-        y1, y2, y3 = y[minind-2], y[minind-1], y[minind]
-    else:
-        x1, x2, x3 = x[minind-1], x[minind], x[minind+1]
-        y1, y2, y3 = y[minind-1], y[minind], y[minind+1]
-    a = ((y1-y2)*(x1-x3) - (y1-y3)*(x1-x2)) / ((x1-x2)*(x1-x3)*(x2-x3))
-    b = (y1-y2) / (x1-x2) - a * (x1+x2)
-    c = y1 - a*x1*x1 - b*x1
-    xmin = -b / (2. * a)
-    ymin = a * xmin * xmin + b * xmin + c
-    if (ymin > y[minind]) or (xmin < min(x)) or (xmin > max(x)):
-        xmin = x[minind]
-        ymin = y[minind]
-    return xmin, ymin
 
 
 def vrrkmE(maxE, dE, rovibm, rovibcl, E0l, deltaH0l, rcoordl, convK=True, convJ=True,

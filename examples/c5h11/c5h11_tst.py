@@ -4,10 +4,23 @@
 TST calculations for:
 nC5H11 <=> C2H4 + nC3H7
 sC5H11 <=> C3H6 + C2H5
+
+Output:
+nC5H11 <=> C2H4 + nC3H7
+T[K]    k[s^-1]      krev[cm^-3 s^-1]   k/krev   Keq
+  300  1.444756e-09  1.257773e-19  1.148662e+10  1.148662e+10
+ 1000  7.158521e+06  8.567310e-15  8.355622e+20  8.355622e+20
+ 2000  2.056132e+10  3.468158e-13  5.928600e+22  5.928600e+22
+
+sC5H11 <=> C3H6 + C2H5
+T[K]    k[s^-1]      krev[cm^-3 s^-1]   k/krev   Keq
+  300  1.722858e-09  8.401399e-20  2.050680e+10  2.050680e+10
+ 1000  1.142771e+07  1.834652e-15  6.228819e+21  6.228819e+21
+ 2000  4.277936e+10  3.693018e-14  1.158385e+24  1.158385e+24
 """
 
 from me2d import RoVib
-from me2d import tstrates, equilibrium_consts_12, name2weight
+from me2d import tstrates, equilibrium_consts_dissoc, bimol_tstrate, name2weight
 
 
 nc5h11 = RoVib(\
@@ -124,27 +137,27 @@ E0_ts_scc = 10392.83
 H0_scc = 7591.92
 
 T = [300., 1000., 2000.]
-redmass = name2weight("C2H4") * name2weight("C3H7") / name2weight("C5H11")
-gelec_ratio = 1. * 2. / 2.
 k = tstrates(T, nc5h11, [ts_ncc], [E0_ts_ncc-E0_nc5h11], [H0_ncc-E0_nc5h11])[0]
-keq = equilibrium_consts_12(T, nc5h11, c2h4, nc3h7, redmass, gelec_ratio, H0_ncc-E0_nc5h11)
-krev = k / keq
+krev = bimol_tstrate(T, c2h4, nc3h7, ts_ncc, 1, 2, 2, name2weight("C2H4"),
+                     name2weight("C3H7"), E0_ts_ncc-H0_ncc, E0_nc5h11-H0_ncc)
+keq = equilibrium_consts_dissoc(T, nc5h11, c2h4, nc3h7, 2, 1, 2, name2weight("C2H4"),
+                                name2weight("C3H7"), H0_ncc-E0_nc5h11)
 
 print("nC5H11 <=> C2H4 + nC3H7")
-print("T[K]    k[s^-1]      krev[molecule cm^-3 s^-1]")
+print("T[K]    k[s^-1]      krev[cm^-3 s^-1]   k/krev   Keq")
 for i in range(len(T)):
-    print("%5.0f  %12.6e  %12.6e" % (T[i], k[i], krev[i]))
+    print("%5.0f  %12.6e  %12.6e  %12.6e  %12.6e" % (T[i], k[i], krev[i], k[i]/krev[i], keq[i]))
 
 
-redmass = name2weight("C2H5") * name2weight("C3H6") / name2weight("C5H11")
-gelec_ratio = 1. * 2. / 2.
 k = tstrates(T, sc5h11, [ts_scc], [E0_ts_scc-E0_sc5h11], [H0_scc-E0_sc5h11])[0]
-keq = equilibrium_consts_12(T, sc5h11, c2h5, c3h6, redmass, gelec_ratio, H0_scc-E0_sc5h11)
-krev = k / keq
+krev = bimol_tstrate(T, c2h5, c3h6, ts_scc, 2, 1, 2, name2weight("C2H5"),
+                     name2weight("C3H6"), E0_ts_scc-H0_scc, E0_sc5h11-H0_scc)
+keq = equilibrium_consts_dissoc(T, sc5h11, c2h5, c3h6, 2, 2, 1, name2weight("C2H5"), 
+                                name2weight("C3H6"), H0_scc-E0_sc5h11)
 
 print("")
 print("sC5H11 <=> C3H6 + C2H5")
-print("T[K]   k[s^-1]   krev[molecule cm^-3 s^-1]")
+print("T[K]    k[s^-1]      krev[cm^-3 s^-1]   k/krev   Keq")
 for i in range(len(T)):
-    print("%5.0f  %12.6e  %12.6e" % (T[i], k[i], krev[i]))
+    print("%5.0f  %12.6e  %12.6e  %12.6e  %12.6e" % (T[i], k[i], krev[i], k[i]/krev[i], keq[i]))
 

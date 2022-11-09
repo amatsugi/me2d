@@ -8,46 +8,9 @@ import numpy as np
 from scipy import interpolate
 
 from . import constants
+from .utils import name2weight
 
-def name2weight(name):
-    """ returns moleculer weights [amu] of given molecular formula """
-    name = name.strip()
-    n = len(name)
-    l = []
-    s = ""
-    state = 0 # 0  1 
-    for i in range(n):
-        if len(s) == 0:
-            s += name[i]
-            continue
-        if name[i].isdigit():
-            if s[-1].isdigit(): s += name[i]
-            else: l.append(s); s = name[i]
-        else:
-            if not s[-1].isdigit(): s += name[i]
-            else: l.append(s); s = name[i]
-    if len(s) > 0: l.append(s)
-    
-    l2 = []
-    for s in l:
-        if s.isdigit():
-            for i in range(int(s)-1):
-                l2.append(l2[-1])
-            continue
-        while len(s) > 0:
-            if len(s) == 1:
-                l2.append(s)
-                s = ""
-                break
-            if s[:2] in constants.atom_name:
-                l2.append(s[:2])
-                s = s[2:]
-            else:
-                l2.append(s[0])
-                s = s[1:]
-    return sum(constants.amass[x] for x in l2)
-    
-    
+
 def collfreq_hs(wt_or_name_1, wt_or_name_2, sigmaA, T):
     """ hard-sphere collision frequency [cm^3 molecule^-1 s^-1]
     arguments:

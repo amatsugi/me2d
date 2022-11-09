@@ -4,10 +4,23 @@
 Canonical variational TST calculations for:
 C6H5CH3 <=> C6H5CH2 + H
 C6H5CH3 <=> C6H5 + CH3
+
+Output:
+C6H5CH3 <=> C6H5CH2 + H
+T[K]    r[A]     k[s^-1]      krev[molecule cm^-3 s^-1]
+  300   3.2152  4.827383e-51  3.062824e-10
+ 1000   2.8281  4.717706e-05  1.991636e-10
+ 2000   2.5589  3.854309e+05  1.644954e-10
+
+C6H5CH3 <=> C6H5 + CH3
+T[K]    r[A]     k[s^-1]      krev[molecule cm^-3 s^-1]
+  300   3.9252  5.387007e-59  2.047510e-11
+ 1000   3.3406  3.003737e-06  3.417403e-11
+ 2000   3.0054  3.255418e+05  3.806832e-11
 """
 
 from me2d import RoVib
-from me2d import cvtrates, equilibrium_consts_12, name2weight
+from me2d import cvtrates, equilibrium_consts_dissoc, name2weight
 
 
 c6h5ch3 = RoVib(\
@@ -137,10 +150,8 @@ deltaH0_ch = 31151.944
 deltaH0_cc = 35679.366
 
 T = [300., 1000., 2000.]
-redmass = name2weight("C7H7") * name2weight("H") / name2weight("C7H8")
-gelec_ratio = 2. * 2. / 1.
 ktstl, kv, rv = cvtrates(T, c6h5ch3, vtsl_ch, E0l_ch, deltaH0l_ch, rcoordl_ch)
-keq = equilibrium_consts_12(T, c6h5ch3, hatom, c7h7, redmass, gelec_ratio, deltaH0_ch)
+keq = equilibrium_consts_dissoc(T, c6h5ch3, hatom, c7h7, 1, 2, 2, name2weight("C7H7"), name2weight("H"), deltaH0_ch)
 krev = kv / keq
 print("C6H5CH3 <=> C6H5CH2 + H")
 print("T[K]    r[A]     k[s^-1]      krev[molecule cm^-3 s^-1]")
@@ -151,7 +162,7 @@ for i in range(len(T)):
 redmass = name2weight("C6H5") * name2weight("CH3") / name2weight("C7H8")
 gelec_ratio = 2. * 2. / 1.
 ktstl, kv, rv = cvtrates(T, c6h5ch3, vtsl_cc, E0l_cc, deltaH0l_cc, rcoordl_cc)
-keq = equilibrium_consts_12(T, c6h5ch3, ch3, c6h5, redmass, gelec_ratio, deltaH0_cc)
+keq = equilibrium_consts_dissoc(T, c6h5ch3, ch3, c6h5, 1, 2, 2, name2weight("C6H5"), name2weight("CH3"), deltaH0_cc)
 krev = kv / keq
 print("")
 print("C6H5CH3 <=> C6H5 + CH3")

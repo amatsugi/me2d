@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
-__version__ = "2021.04.16"
+__version__ = "2022.10.28"
 
 from .rovib import RoVib
 from .rovib import read_rovib
 from .rovib import equilibrium_consts
-from .rovib import equilibrium_consts_12
+from .rovib import equilibrium_consts_dissoc
 
 from .rotconst import read_geom
 from .rotconst import external_rotc
@@ -17,10 +17,14 @@ from .rrkm import vrrkmE
 from .rrkm import vrrkmEJ
 from .rrkm import ilt
 from .rrkm import rrkmth
-from .rrkm import tstrates
-from .rrkm import cvtrates
+from .rrkm import numrates
 
-from .collfreq import name2weight
+from .tst import tstrates
+from .tst import cvtrates
+from .tst import bimol_tstrate
+
+from .utils import name2weight
+
 from .collfreq import collfreq_hs
 from .collfreq import collfreq_capture
 from .collfreq import collfreq_lj
