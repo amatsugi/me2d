@@ -159,8 +159,6 @@ for i in range(len(T)):
     print("%5.0f  %7.4f  %12.6e  %12.6e" % (T[i], rv[i], kv[i], krev[i]))
 
 
-redmass = name2weight("C6H5") * name2weight("CH3") / name2weight("C7H8")
-gelec_ratio = 2. * 2. / 1.
 ktstl, kv, rv = cvtrates(T, c6h5ch3, vtsl_cc, E0l_cc, deltaH0l_cc, rcoordl_cc)
 keq = equilibrium_consts_dissoc(T, c6h5ch3, ch3, c6h5, 1, 2, 2, name2weight("C6H5"), name2weight("CH3"), deltaH0_cc)
 krev = kv / keq
