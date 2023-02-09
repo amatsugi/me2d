@@ -7,20 +7,38 @@ sC5H11 <=> C3H6 + C2H5
 
 Output:
 nC5H11 <=> C2H4 + nC3H7
-T[K]    k[s^-1]      krev[cm^-3 s^-1]   k/krev   Keq
-  300  1.444756e-09  1.257773e-19  1.148662e+10  1.148662e+10
- 1000  7.158521e+06  8.567310e-15  8.355622e+20  8.355622e+20
- 2000  2.056132e+10  3.468158e-13  5.928600e+22  5.928600e+22
+T[K]    k[s^-1]      krev[cm^-3 s^-1]   k/krev    Keq          kfit[s^-1]    kfitrev[cm^-3 s^-1]
+  300  1.444756e-09  1.257773e-19  1.148662e+10  1.148662e+10  1.381659e-09  1.260008e-19
+  400  4.924181e-04  4.372765e-18  1.126102e+14  1.126102e+14  5.125240e-04  4.363662e-18
+  500  1.110392e+00  4.270773e-17  2.599979e+16  2.599979e+16  1.159358e+00  4.264001e-17
+  600  1.989009e+02  2.157511e-16  9.218997e+17  9.218997e+17  2.037653e+02  2.156801e-16
+  800  1.374602e+05  1.957316e-15  7.022892e+19  7.022892e+19  1.350670e+05  1.959779e-15
+ 1000  7.158521e+06  8.567310e-15  8.355622e+20  8.355622e+20  6.859874e+06  8.580741e-15
+ 1500  1.436630e+09  8.510131e-14  1.688141e+22  1.688141e+22  1.374861e+09  8.515041e-14
+ 2000  2.056132e+10  3.468158e-13  5.928600e+22  5.928600e+22  2.046168e+10  3.466851e-13
+ 2500  1.017085e+11  9.384495e-13  1.083792e+23  1.083792e+23  1.065286e+11  9.376997e-13
+           A           n       E/R      MAD%  RMSD% MAXPOSD% MAXNEGD%
+kfit    4.632e+11    0.5885   15185.4    3.4    3.7    4.7   -4.4
+kfitrev 1.854e-22    3.0200    3211.2    0.1    0.1    0.2   -0.2
 
 sC5H11 <=> C3H6 + C2H5
-T[K]    k[s^-1]      krev[cm^-3 s^-1]   k/krev   Keq
-  300  1.722858e-09  8.401399e-20  2.050680e+10  2.050680e+10
- 1000  1.142771e+07  1.834652e-15  6.228819e+21  6.228819e+21
- 2000  4.277936e+10  3.693018e-14  1.158385e+24  1.158385e+24
+T[K]    k[s^-1]      krev[cm^-3 s^-1]   k/krev    Keq          kfit[s^-1]    kfitrev[cm^-3 s^-1]
+  300  1.722858e-09  8.401399e-20  2.050680e+10  2.050680e+10  1.646799e-09  8.461193e-20
+  400  6.090818e-04  2.284194e-18  2.666506e+14  2.666506e+14  6.343312e-04  2.268151e-18
+  500  1.438562e+00  1.813888e-17  7.930817e+16  7.930817e+16  1.502760e+00  1.801871e-17
+  600  2.700629e+02  7.685465e-17  3.513944e+18  3.513944e+18  2.766885e+02  7.662758e-17
+  800  2.035285e+05  5.244127e-16  3.881076e+20  3.881076e+20  1.998827e+05  5.262674e-16
+ 1000  1.142771e+07  1.834652e-15  6.228819e+21  6.228819e+21  1.094495e+07  1.846744e-15
+ 1500  2.664812e+09  1.210803e-14  2.200864e+23  2.200864e+23  2.550462e+09  1.217355e-14
+ 2000  4.277936e+10  3.693018e-14  1.158385e+24  1.158385e+24  4.258610e+10  3.693065e-14
+ 2500  2.322386e+11  7.984702e-14  2.908545e+24  2.908545e+24  2.432347e+11  7.937366e-14
+           A           n       E/R      MAD%  RMSD% MAXPOSD% MAXNEGD%
+kfit    2.611e+10    1.0557   15069.4    3.4    3.7    4.7   -4.4
+kfitrev 6.213e-20    1.9642    3268.3    0.5    0.6    0.7   -0.7
 """
 
 from me2d import RoVib
-from me2d import tstrates, equilibrium_consts_dissoc, bimol_tstrate, name2weight
+from me2d import tstrates, equilibrium_consts_dissoc, bimol_tstrate, fit_arrhenius
 
 
 nc5h11 = RoVib(\
@@ -136,28 +154,34 @@ H0_ncc =  8625.83
 E0_ts_scc = 10392.83
 H0_scc = 7591.92
 
-T = [300., 1000., 2000.]
+T = [300., 400., 500., 600., 800., 1000., 1500., 2000., 2500.]
 k = tstrates(T, nc5h11, [ts_ncc], [E0_ts_ncc-E0_nc5h11], [H0_ncc-E0_nc5h11])[0]
-krev = bimol_tstrate(T, c2h4, nc3h7, ts_ncc, 1, 2, 2, name2weight("C2H4"),
-                     name2weight("C3H7"), E0_ts_ncc-H0_ncc, E0_nc5h11-H0_ncc)
-keq = equilibrium_consts_dissoc(T, nc5h11, c2h4, nc3h7, 2, 1, 2, name2weight("C2H4"),
-                                name2weight("C3H7"), H0_ncc-E0_nc5h11)
+krev = bimol_tstrate(T, c2h4, nc3h7, ts_ncc, 1, 2, 2, "C2H4", "C3H7", E0_ts_ncc-H0_ncc, E0_nc5h11-H0_ncc)
+keq = equilibrium_consts_dissoc(T, nc5h11, c2h4, nc3h7, 2, 1, 2, "C2H4", "C3H7", H0_ncc-E0_nc5h11)
+params, kfit, stats = fit_arrhenius(T, k)
+paramsrev, kfitrev, statsrev = fit_arrhenius(T, krev)
 
 print("nC5H11 <=> C2H4 + nC3H7")
-print("T[K]    k[s^-1]      krev[cm^-3 s^-1]   k/krev   Keq")
+print("T[K]    k[s^-1]      krev[cm^-3 s^-1]   k/krev    Keq          kfit[s^-1]    kfitrev[cm^-3 s^-1]")
 for i in range(len(T)):
-    print("%5.0f  %12.6e  %12.6e  %12.6e  %12.6e" % (T[i], k[i], krev[i], k[i]/krev[i], keq[i]))
-
+    print("%5.0f  %12.6e  %12.6e  %12.6e  %12.6e  %12.6e  %12.6e" 
+          % (T[i], k[i], krev[i], k[i]/krev[i], keq[i], kfit[i], kfitrev[i], ))
+print("           A           n       E/R      MAD%  RMSD% MAXPOSD% MAXNEGD%")
+print("kfit    %9.3e %9.4f %9.1f %6.1f %6.1f %6.1f %6.1f" % (*params, *stats))
+print("kfitrev %9.3e %9.4f %9.1f %6.1f %6.1f %6.1f %6.1f" % (*paramsrev, *statsrev))
 
 k = tstrates(T, sc5h11, [ts_scc], [E0_ts_scc-E0_sc5h11], [H0_scc-E0_sc5h11])[0]
-krev = bimol_tstrate(T, c2h5, c3h6, ts_scc, 2, 1, 2, name2weight("C2H5"),
-                     name2weight("C3H6"), E0_ts_scc-H0_scc, E0_sc5h11-H0_scc)
-keq = equilibrium_consts_dissoc(T, sc5h11, c2h5, c3h6, 2, 2, 1, name2weight("C2H5"), 
-                                name2weight("C3H6"), H0_scc-E0_sc5h11)
+krev = bimol_tstrate(T, c2h5, c3h6, ts_scc, 2, 1, 2, "C2H5", "C3H6", E0_ts_scc-H0_scc, E0_sc5h11-H0_scc)
+keq = equilibrium_consts_dissoc(T, sc5h11, c2h5, c3h6, 2, 2, 1, "C2H5", "C3H6", H0_scc-E0_sc5h11)
+params, kfit, stats = fit_arrhenius(T, k)
+paramsrev, kfitrev, statsrev = fit_arrhenius(T, krev)
 
 print("")
 print("sC5H11 <=> C3H6 + C2H5")
-print("T[K]    k[s^-1]      krev[cm^-3 s^-1]   k/krev   Keq")
+print("T[K]    k[s^-1]      krev[cm^-3 s^-1]   k/krev    Keq          kfit[s^-1]    kfitrev[cm^-3 s^-1]")
 for i in range(len(T)):
-    print("%5.0f  %12.6e  %12.6e  %12.6e  %12.6e" % (T[i], k[i], krev[i], k[i]/krev[i], keq[i]))
-
+    print("%5.0f  %12.6e  %12.6e  %12.6e  %12.6e  %12.6e  %12.6e" 
+          % (T[i], k[i], krev[i], k[i]/krev[i], keq[i], kfit[i], kfitrev[i], ))
+print("           A           n       E/R      MAD%  RMSD% MAXPOSD% MAXNEGD%")
+print("kfit    %9.3e %9.4f %9.1f %6.1f %6.1f %6.1f %6.1f" % (*params, *stats))
+print("kfitrev %9.3e %9.4f %9.1f %6.1f %6.1f %6.1f %6.1f" % (*paramsrev, *statsrev))

@@ -11,6 +11,7 @@ from scipy.special import gamma, ellipk, ellipe
 from scipy.special import iv as bessel_iv
 
 from . import constants
+from .utils import name2weight
 
 
 class RoVib(object):
@@ -140,6 +141,66 @@ class RoVib(object):
             
         if self.freqimg is not None:
             fp.write("%s freqimg = %g\n" % (prefix, self.freqimg))
+        if E0 is not None:
+            fp.write("%s E0 = %g\n" % (prefix, E0))
+        if deltaH0 is not None:
+            fp.write("%s deltaH0 = %g\n" % (prefix, deltaH0))
+        if rotB2Dprod is not None:
+            fp.write("%s rotB2Dprod = %g\n" % (prefix, rotB2Dprod))
+
+
+class RoVibAtom(object):
+    """ Dummy rovibrational properties fro atoms """
+    
+    def __init__(self, states=None):
+        self.nsym = None
+        self.rotA = None
+        self.rotB2D = None
+        self.freq = []
+        self.fscale = 1
+        self.introt = []
+        if states is None: self.states = [(1, 0.)]
+        else: self.states = states
+        self.freqimg = None
+    
+    def part(self, T):
+        T = np.atleast_1d(T)
+        q = np.ones(len(T))
+        kT = T / constants.cm2k
+        def bol(E):
+            return np.exp(- E / kT)
+        if len(self.states) > 0:
+            qstates = 0.
+            for x in self.states:
+                degen, level = x
+                qstates += degen * bol(level)
+            q *= qstates
+        return q
+
+    def __str__(self):
+        outf = StringIO()
+        self.write_to(outf=outf)
+        return outf.getvalue()
+
+    def write_to(self, outf=None, prefix=None, E0=None, deltaH0=None, rotB2Dprod=None):
+        if outf is None: fp = sys.stdout
+        elif hasattr(outf, "write"): fp = outf
+        else: fp = open(outf, "w")
+        
+        if prefix is None: prefix = ""
+        if self.states is not None and len(self.states) > 0:
+            n1 = 6
+            div, mod = divmod(len(self.states), n1)
+            spref = "%s states = [" % (prefix)
+            for i in range(div+1):
+                tmp = self.states[i*n1 : min((i+1)*n1, len(self.states))]
+                tmp = ", ".join("(%g, %g)" % (x[0], x[1]) for x in tmp)
+                if (i == div-1 and mod == 0) or (i == div):
+                    fp.write("%s%s]\n" % (spref, tmp))
+                    break
+                fp.write("%s%s,\n" % (spref, tmp))
+                spref = "%s%s" % (prefix, " "*(len(spref)-len(prefix)))
+            
         if E0 is not None:
             fp.write("%s E0 = %g\n" % (prefix, E0))
         if deltaH0 is not None:
@@ -300,13 +361,15 @@ def equilibrium_consts(T, rovib_reac, rovib_prod, deltaH0):
     return keq
 
 def equilibrium_consts_dissoc(T, rovib_reac, rovib_prod1, rovib_prod2, gelec_reac, gelec_prod1, gelec_prod2,
-                              m_prod1, m_prod2, deltaH0):
+                              wt_or_name_prod1, wt_or_name_prod2, deltaH0):
     """ Equilibrium constants for unimolecular reactant and bimolecular products, A => B + C.
-    m_prod[12]: molecular weight [amu] of B and C
+    wt_or_name_prod[12]: molecular weight [amu] or formula of B and C
     gelec_[reac|prod[12]]: electronic degeneracy of A, B and C
     """
     T = np.atleast_1d(T)
-    redmass = m_prod1 * m_prod2 / (m_prod1 + m_prod2)
+    if isinstance(wt_or_name_prod1, str): wt_or_name_prod1 = name2weight(wt_or_name_prod1)
+    if isinstance(wt_or_name_prod2, str): wt_or_name_prod2 = name2weight(wt_or_name_prod2)
+    redmass = wt_or_name_prod1 * wt_or_name_prod2 / (wt_or_name_prod1 + wt_or_name_prod2)
     conv = (2. * np.pi * constants.amu * constants.kb / constants.h / constants.h)**1.5 * 1e-6
     qtrans_ratio = conv * redmass**1.5 * T**1.5
     qelec_ratio = gelec_prod1 * gelec_prod2 / gelec_reac
@@ -322,7 +385,8 @@ def read_rovib_gaussian(fn):
     
     freql = []
     freqimagl = []
-    nsym = None
+    nsym = None  # rot. symm. No.
+    nisom = None  # No. of optical isomers
     rotl = []
     for l in fp:
         if l.startswith(" Frequencies --"):
@@ -336,14 +400,21 @@ def read_rovib_gaussian(fn):
         if l.startswith(" Rotational constants (GHZ):"):
             ls = l.split()
             rotl = [float(x)*1e9/(constants.c0*100.) for x in ls[3:]]
+        if l.startswith(" Full point group"):
+            pg = l.split()[3]
+            if len(pg) > 2: nisom = 1
+            elif pg[0] == "C" and pg[1] != "S" and pg[1] != "I": nisom = 2
+            elif pg[0] == "D": nisom = 2
+            else: nisom = 1
 
     rovib.freq = freql
     if len(freqimagl) == 1:
         rovib.freqimg = abs(freqimagl[0])
     elif len(freqimagl) > 1:
         raise ValueError("multiple imag. freqs")
-
+    
     if nsym is not None: rovib.nsym = nsym
+    if nisom is not None: rovib.states = [(nisom, 0.)]
     
     if len(rotl) == 3:
         rovib.rotA = rotl[0]

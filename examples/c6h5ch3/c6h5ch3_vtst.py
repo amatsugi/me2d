@@ -20,7 +20,7 @@ T[K]    r[A]     k[s^-1]      krev[molecule cm^-3 s^-1]
 """
 
 from me2d import RoVib
-from me2d import cvtrates, equilibrium_consts_dissoc, name2weight
+from me2d import cvtrates, equilibrium_consts_dissoc
 
 
 c6h5ch3 = RoVib(\
@@ -151,7 +151,7 @@ deltaH0_cc = 35679.366
 
 T = [300., 1000., 2000.]
 ktstl, kv, rv = cvtrates(T, c6h5ch3, vtsl_ch, E0l_ch, deltaH0l_ch, rcoordl_ch)
-keq = equilibrium_consts_dissoc(T, c6h5ch3, hatom, c7h7, 1, 2, 2, name2weight("C7H7"), name2weight("H"), deltaH0_ch)
+keq = equilibrium_consts_dissoc(T, c6h5ch3, hatom, c7h7, 1, 2, 2, "C7H7", "H", deltaH0_ch)
 krev = kv / keq
 print("C6H5CH3 <=> C6H5CH2 + H")
 print("T[K]    r[A]     k[s^-1]      krev[molecule cm^-3 s^-1]")
@@ -160,7 +160,7 @@ for i in range(len(T)):
 
 
 ktstl, kv, rv = cvtrates(T, c6h5ch3, vtsl_cc, E0l_cc, deltaH0l_cc, rcoordl_cc)
-keq = equilibrium_consts_dissoc(T, c6h5ch3, ch3, c6h5, 1, 2, 2, name2weight("C6H5"), name2weight("CH3"), deltaH0_cc)
+keq = equilibrium_consts_dissoc(T, c6h5ch3, ch3, c6h5, 1, 2, 2, "C6H5", "CH3", deltaH0_cc)
 krev = kv / keq
 print("")
 print("C6H5CH3 <=> C6H5 + CH3")

@@ -9,6 +9,7 @@ import numpy as np
 
 from . import constants
 from .utils import findmin
+from .utils import name2weight
 
 
 def tunnel_eck_T(T, E0, deltaH0, freqimg, fE=50., fT=20.):
@@ -79,11 +80,13 @@ def cvtrates(T, rovibm, rovibcl, E0l, deltaH0l, rcoordl, convK=True, convJ=True)
 
 
 def bimol_tstrate(T, rovib_reac1, rovib_reac2, rovib_ts, gelec_reac1, gelec_reac2, gelec_ts,
-                  m_reac1, m_reac2, E0, deltaH0):
+                  wt_or_name_1, wt_or_name_2, E0, deltaH0):
     """ thermal rate constant for a bimolecular reaction from transition state theory"""
     T = np.atleast_1d(T)
+    if isinstance(wt_or_name_1, str): wt_or_name_1 = name2weight(wt_or_name_1)
+    if isinstance(wt_or_name_2, str): wt_or_name_2 = name2weight(wt_or_name_2)
     
-    redmass = m_reac1 * m_reac2 / (m_reac1 + m_reac2)
+    redmass = wt_or_name_1 * wt_or_name_2 / (wt_or_name_1 + wt_or_name_2)
     conv = (2. * np.pi * constants.amu * constants.kb / constants.h / constants.h)**1.5 * 1e-6
     qtrans_ratio = 1. / (conv * redmass**1.5 * T**1.5)
     qelec_ratio = gelec_ts / (gelec_reac1 * gelec_reac2)

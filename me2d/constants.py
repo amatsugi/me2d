@@ -4,10 +4,11 @@
 constants
 """
 
-h = 6.62607015e-34    # h [J/s]
+h = 6.62607015e-34    # h [J.s]
 c0 = 2.99792458e8     # c0 [m/s]
 kb = 1.380649e-23     # kB [J/K]
 eh = 4.359744722e-18  # hartree [J]
+r = 8.3144621         # R [J/K/mol]
 
 cm2j = h * c0 * 100.  # cm-1 => J
 cm2k = cm2j / kb      # cm-1 => k
