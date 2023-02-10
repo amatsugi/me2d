@@ -1,9 +1,8 @@
 #! /usr/bin/env python3
 
-__version__ = "2023.02.09"
+__version__ = "2023.02.10"
 
 from .rovib import RoVib
-from .rovib import RoVibAtom
 from .rovib import read_rovib_gaussian
 from .rovib import read_rovib_gpo
 from .rovib import read_rovib

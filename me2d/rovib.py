@@ -17,7 +17,7 @@ from .utils import name2weight
 class RoVib(object):
     """ Rovibrational properties of molecule """
     
-    def __init__(self, nsym=1, rotA=None, rotB2D=None, freq=None, fscale=1.,
+    def __init__(self, nsym=1, rotA=None, rotB2D=None, freq=None, fscale=None,
                  introt=None, states=None, freqimg=None):
         self.nsym = nsym     # symmetry number
         self.rotA = rotA     # rot. const. for active 1D rotor [cm^-1]
@@ -26,7 +26,8 @@ class RoVib(object):
         # list of frequencies [cm^-1] and scaling factor
         if freq is None: self.freq = []
         else: self.freq = freq
-        self.fscale = fscale
+        if fscale is None: self.fscale = 1.
+        else: self.fscale = fscale
 
         # internal rotor [(B, sig, hofreq, V0), ...] (B, hofreq, V0 in cm^-1)
         # set hofreq=0 for free rotor
@@ -77,41 +78,46 @@ class RoVib(object):
                            self.states)
 
     def __str__(self):
+        return self.dump()
+
+    def dump(self, prefix=None, append_comma=False, addinfo=None):
         outf = StringIO()
-        self.write_to(outf=outf)
+        self.write_to(outf=outf, prefix=prefix, append_comma=append_comma, addinfo=addinfo)
         return outf.getvalue()
 
-    def write_to(self, outf=None, prefix=None, E0=None, deltaH0=None, rotB2Dprod=None):
+    def write_to(self, outf=None, prefix=None, append_comma=False, addinfo=None):
         if outf is None: fp = sys.stdout
         elif hasattr(outf, "write"): fp = outf
         else: fp = open(outf, "w")
         
         if prefix is None: prefix = ""
+        if append_comma: asep = ","
+        else: asep = ""
         if self.nsym is not None:
-            fp.write("%s nsym = %g\n" % (prefix, self.nsym))
+            fp.write("%snsym = %g%s\n" % (prefix, self.nsym, asep))
         if self.rotA is not None:
-            fp.write("%s rotA = %g\n" % (prefix, self.rotA))
+            fp.write("%srotA = %g%s\n" % (prefix, self.rotA, asep))
         if self.rotB2D is not None:
-            fp.write("%s rotB2D = %g\n" % (prefix, self.rotB2D))
+            fp.write("%srotB2D = %g%s\n" % (prefix, self.rotB2D, asep))
         
         if self.freq is not None and len(self.freq) > 0:
             n1 = 8
             div, mod = divmod(len(self.freq), n1)
-            spref = "%s freq = [" % (prefix)
+            spref = "%sfreq = [" % (prefix)
             for i in range(div+1):
                 tmp = self.freq[i*n1 :min((i+1)*n1, len(self.freq))]
                 tmp = ", ".join("%g" % x for x in tmp)
                 if (i == div-1 and mod == 0) or (i == div):
-                    fp.write("%s%s]\n" % (spref, tmp))
+                    fp.write("%s%s]%s\n" % (spref, tmp, asep))
                     break
                 fp.write("%s%s,\n" % (spref, tmp))
                 spref = "%s%s" % (prefix, " "*(len(spref)-len(prefix)))
 
-        if self.fscale is not None:
-            fp.write("%s fscale = %g\n" % (prefix, self.fscale))
+        if self.fscale is not None and self.fscale != 1:
+            fp.write("%sfscale = %g%s\n" % (prefix, self.fscale, asep))
                 
         if self.introt is not None and len(self.introt) > 0:
-            spref = "%s introt = [" % (prefix)
+            spref = "%sintrot = [" % (prefix)
             for i in range(len(self.introt)):
                 x = self.introt[i]
                 addstr = ""
@@ -121,7 +127,7 @@ class RoVib(object):
                     V0 = float(x[2]*x[2]) / (x[1]*x[1]*x[0])
                     addstr = "  # V0 = %g" % (V0)
                 if i == len(self.introt) - 1:
-                    fp.write("%s(%g, %g, %g, %g)]%s\n" % (spref, *x, addstr))
+                    fp.write("%s(%g, %g, %g, %g)]%s%s\n" % (spref, *x, asep, addstr))
                     break
                 fp.write("%s(%g, %g, %g, %g),%s\n" % (spref, *x, addstr))
                 spref = "%s%s" % (prefix, " "*(len(spref)-len(prefix)))
@@ -129,84 +135,23 @@ class RoVib(object):
         if self.states is not None and len(self.states) > 0:
             n1 = 6
             div, mod = divmod(len(self.states), n1)
-            spref = "%s states = [" % (prefix)
+            spref = "%sstates = [" % (prefix)
             for i in range(div+1):
                 tmp = self.states[i*n1 : min((i+1)*n1, len(self.states))]
                 tmp = ", ".join("(%g, %g)" % (x[0], x[1]) for x in tmp)
                 if (i == div-1 and mod == 0) or (i == div):
-                    fp.write("%s%s]\n" % (spref, tmp))
+                    fp.write("%s%s]%s\n" % (spref, tmp, asep))
                     break
                 fp.write("%s%s,\n" % (spref, tmp))
                 spref = "%s%s" % (prefix, " "*(len(spref)-len(prefix)))
             
         if self.freqimg is not None:
-            fp.write("%s freqimg = %g\n" % (prefix, self.freqimg))
-        if E0 is not None:
-            fp.write("%s E0 = %g\n" % (prefix, E0))
-        if deltaH0 is not None:
-            fp.write("%s deltaH0 = %g\n" % (prefix, deltaH0))
-        if rotB2Dprod is not None:
-            fp.write("%s rotB2Dprod = %g\n" % (prefix, rotB2Dprod))
+            fp.write("%sfreqimg = %g%s\n" % (prefix, self.freqimg, asep))
 
-
-class RoVibAtom(object):
-    """ Dummy rovibrational properties fro atoms """
-    
-    def __init__(self, states=None):
-        self.nsym = None
-        self.rotA = None
-        self.rotB2D = None
-        self.freq = []
-        self.fscale = 1
-        self.introt = []
-        if states is None: self.states = [(1, 0.)]
-        else: self.states = states
-        self.freqimg = None
-    
-    def part(self, T):
-        T = np.atleast_1d(T)
-        q = np.ones(len(T))
-        kT = T / constants.cm2k
-        def bol(E):
-            return np.exp(- E / kT)
-        if len(self.states) > 0:
-            qstates = 0.
-            for x in self.states:
-                degen, level = x
-                qstates += degen * bol(level)
-            q *= qstates
-        return q
-
-    def __str__(self):
-        outf = StringIO()
-        self.write_to(outf=outf)
-        return outf.getvalue()
-
-    def write_to(self, outf=None, prefix=None, E0=None, deltaH0=None, rotB2Dprod=None):
-        if outf is None: fp = sys.stdout
-        elif hasattr(outf, "write"): fp = outf
-        else: fp = open(outf, "w")
-        
-        if prefix is None: prefix = ""
-        if self.states is not None and len(self.states) > 0:
-            n1 = 6
-            div, mod = divmod(len(self.states), n1)
-            spref = "%s states = [" % (prefix)
-            for i in range(div+1):
-                tmp = self.states[i*n1 : min((i+1)*n1, len(self.states))]
-                tmp = ", ".join("(%g, %g)" % (x[0], x[1]) for x in tmp)
-                if (i == div-1 and mod == 0) or (i == div):
-                    fp.write("%s%s]\n" % (spref, tmp))
-                    break
-                fp.write("%s%s,\n" % (spref, tmp))
-                spref = "%s%s" % (prefix, " "*(len(spref)-len(prefix)))
-            
-        if E0 is not None:
-            fp.write("%s E0 = %g\n" % (prefix, E0))
-        if deltaH0 is not None:
-            fp.write("%s deltaH0 = %g\n" % (prefix, deltaH0))
-        if rotB2Dprod is not None:
-            fp.write("%s rotB2Dprod = %g\n" % (prefix, rotB2Dprod))
+        if addinfo is not None:
+            for x in addinfo:
+                name, val = x
+                fp.write("%s%s = %g%s\n" % (prefix, name, val, asep))
 
 
 def mod_bs(nbin, dE, nsym, freq, freerot, hindrot, states,

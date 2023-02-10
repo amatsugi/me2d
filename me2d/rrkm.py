@@ -87,11 +87,11 @@ def rrkmE(maxE, dE, rovibm, rovibcl, E0l, deltaH0l, convK=True, convJ=True,
     
     if ofp is not None:
         ofp.write("# reactant:\n")
-        rovibm.write_to(ofp, prefix="#  ")
+        rovibm.write_to(ofp, prefix="#   ")
         for ich in range(nchan):
             ofp.write("# channel-%d:\n" % (ich+1))
-            rovibcl[ich].write_to(ofp, prefix="#  ", E0=E0l[ich],
-                                  deltaH0=deltaH0l[ich])
+            rovibcl[ich].write_to(ofp, prefix="#   ", 
+                                  addinfo=(("E0", E0l[ich]), ("deltaH0", deltaH0l[ich])))
         ofp.write("# RRKM calculation:\n")
         if rho_sums is not None:
             ofp.write("#   use given density and sum of states\n")
@@ -192,11 +192,12 @@ def rrkmEJ(maxE, dE, maxJ, rovibm, rovibcl, E0l, deltaH0l, rotB2Dprodl,
     
     if ofp is not None:
         ofp.write("# reactant:\n")
-        rovibm.write_to(ofp, prefix="#  ")
+        rovibm.write_to(ofp, prefix="#   ")
         for ich in range(nchan):
             ofp.write("# channel-%d:\n" % (ich+1))
-            rovibcl[ich].write_to(ofp, prefix="#  ", E0=E0l[ich],
-                                  deltaH0=deltaH0l[ich], rotB2Dprod=rotB2Dprodl[ich])
+            rovibcl[ich].write_to(ofp, prefix="#   ",
+                                  addinfo=(("E0", E0l[ich]), ("deltaH0", deltaH0l[ich]),
+                                           ("rotB2Dprod", rotB2Dprodl[ich])))
         ofp.write("# RRKM(E,J) calculation:\n")
         ofp.write("#   nbin = %d\n" % (nbin))
         ofp.write("#   dE = %d\n" % (dE))
@@ -293,7 +294,7 @@ def vrrkmE(maxE, dE, rovibm, rovibcl, E0l, deltaH0l, rcoordl, convK=True, convJ=
     nchan = 1
     if ofp is not None:
         ofp.write("# reactant:\n")
-        rovibm.write_to(ofp, prefix="#  ")
+        rovibm.write_to(ofp, prefix="#   ")
         ofp.write("# variational RRKM calculation (%d points):\n" % len(rovibcl))
         if rho_sums is not None:
             ofp.write("#   use given density and sum of states\n")
@@ -368,7 +369,7 @@ def vrrkmEJ(maxE, dE, maxJ, rovibm, rovibcl, E0l, deltaH0l, rotB2Dprodl, rcoordl
     
     if ofp is not None:
         ofp.write("# reactant:\n")
-        rovibm.write_to(ofp, prefix="#  ")
+        rovibm.write_to(ofp, prefix="#   ")
         ofp.write("# variational RRKM(E,J) calculation (%d points):\n" % len(rovibcl))
         ofp.write("#   nbin = %d\n" % (nbin))
         ofp.write("#   dE = %d\n" % (dE))
@@ -476,7 +477,7 @@ def ilt(maxE, dE, rovibm, ilt_A, ilt_E, convK=True, convJ=True,
     
     if ofp is not None:
         ofp.write("# reactant:\n")
-        rovibm.write_to(ofp, prefix="#  ")
+        rovibm.write_to(ofp, prefix="#   ")
         ofp.write("# ILT calculation:\n")
         ofp.write("#   convK, convJ = %s, %s\n" % (convK, convJ))
         ofp.write("#   A = %g\n" % (ilt_A))
