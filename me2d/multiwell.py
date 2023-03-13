@@ -153,20 +153,14 @@ class MEBaseMW(object):
                     raise ValueError("isolated well: %s" % (self.names[iwell]))
 
     def get_channel_strings(self):
+        # for dissociations only
         kstrs = []
         for iwell in range(self.nwell):
             well = self.wells[iwell]
             for ich in range(well.nchan):
                 if self.channels[iwell][ich] is not None: continue
-                s = "%s-k%d" % (self.names[iwell], ich+1)
-                if self.channels[iwell][ich] is None: s += "(dis)"
-                else: s += "(to-%s)" % (self.names[self.channels[iwell][ich]])
-                kstrs.append(s)
-        xstrs = []
-        for iwell in range(self.nwell):
-            s = "x(%s)" % (self.names[iwell])
-            xstrs.append(s)
-        return kstrs, xstrs
+                kstrs.append("%s-ch%d" % (self.names[iwell], ich+1))
+        return kstrs
 
     def get_channel_strings_phnm(self):
         dischl = []
@@ -209,6 +203,9 @@ class MEBaseMW(object):
             kdl[i] = scipy.linalg.lu_solve(G_LU, kssl)
         
         nm1 = self.nwell-1
+        if nm1 == 0:
+            kwl = []
+            return kdl, kwl
         GW = np.zeros((self.nwell*nm1, self.nwell*nm1))
         dvec = np.zeros(self.nwell*nm1)
         for i in range(self.nwell):

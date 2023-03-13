@@ -6,7 +6,7 @@ Thermal decomposition in the n-,s-C5H11 system
 
 Steady-state decomposition of equilibrated mixture of n- and s-C5H11 and eigenvalues
 sample output (c5h11_3b_me2d_eig.dat):
-   T[K]    p[bar]     w1-k2(dis)   w2-k2(dis)    ktot[s-1]        x(w1)        x(w2)          ev1          ev2          ev3          ev4          ev5
+   T[K]    p[bar]         w1-ch2       w2-ch2    ktot[s-1]        x(w1)        x(w2)          ev1          ev2          ev3          ev4          ev5
   1000.0  1.000e+02   1.6402e+06   7.9684e+06   9.6086e+06   2.4322e-01   7.5678e-01  -9.6131e+06  -1.3071e+07  -6.8163e+09  -7.9500e+09  -1.2926e+10
   1000.0  1.000e+01   1.0036e+06   6.1290e+06   7.1326e+06   2.0007e-01   7.9993e-01  -7.1355e+06  -9.8239e+06  -7.6854e+08  -8.8914e+08  -1.5797e+09
   1000.0  1.000e+00   3.3975e+05   2.9581e+06   3.2979e+06   1.4968e-01   8.5032e-01  -3.2990e+06  -4.8171e+06  -9.9798e+07  -1.1159e+08  -2.1325e+08
@@ -54,7 +54,8 @@ memw["w1"].set_params(Z_w1, y_e, y_J, a_e_w1, a_J_w1)
 memw["w2"].set_params(Z_w2, y_e, y_J, a_e_w2, a_J_w2)
 
 outfp = open(outfn, "w")
-kstrl, xstrl = memw.get_channel_strings()
+kstrl = memw.get_channel_strings()
+xstrl = ["x(%s)" % name for name in memw.names]
 if neig > 1: addstrl = ["ev%s" % (i+1) for i in range(neig)]
 else: addstrl = []
 outfp.write("   T[K]    p[bar]   %s\n" % 

@@ -6,7 +6,7 @@ Thermal decomposition in the n-,s-C5H11 system
 
 Steady-state decomposition of n-C5H11
 sample output (c5h11_2a_me1d_E_w1.dat):
-   T[K]    p[bar]     w1-k2(dis)   w2-k2(dis)    ktot[s-1]        x(w1)        x(w2)
+   T[K]    p[bar]         w1-ch2       w2-ch2    ktot[s-1]        x(w1)        x(w2)
   1000.0  1.000e+02   4.7452e+06   3.2981e+06   8.0433e+06   6.9810e-01   3.0190e-01
   1000.0  1.000e+01   3.5927e+06   2.8640e+06   6.4566e+06   6.9099e-01   3.0901e-01
   1000.0  1.000e+00   1.6175e+06   1.8428e+06   3.4603e+06   6.7063e-01   3.2937e-01
@@ -48,7 +48,8 @@ memw["w1"].set_params(Z_w1, y, alpha_w1)
 memw["w2"].set_params(Z_w2, y, alpha_w2)
 
 outfp = open(outfn, "w")
-kstrl, xstrl = memw.get_channel_strings()
+kstrl = memw.get_channel_strings()
+xstrl = ["x(%s)" % name for name in memw.names]
 outfp.write("   T[K]    p[bar]   %s\n" % 
             (" ".join("%12s" % x for x in kstrl+["ktot[s-1]"]+xstrl)))
 

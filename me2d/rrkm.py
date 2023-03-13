@@ -99,7 +99,7 @@ def rrkmE(maxE, dE, rovibm, rovibcl, E0l, deltaH0l, convK=True, convJ=True,
             ofp.write("#   convK, convJ = %s, %s\n" % (convK, convJ))
             if (not convJ) and centcorr: 
                 ofp.write("#   centrifugal correction applied to k\n")
-                ofp.write("#   rho devided by B**(dim/2)*sig\n")
+                ofp.write("#   rho devided by B**(dim/2)\n")
         ofp.write("#   nbin, dE = %d, %g\n" % (nbin, dE))
         ofp.write("#   nchan = %d\n" % (nchan))
         if hasattr(ofp, "flush"): ofp.flush()
