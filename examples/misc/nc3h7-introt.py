@@ -29,6 +29,7 @@ n-C3H7, wb97xd/6-311++g(d,p) int=ultrafine
 
 atoms, coord = me2d.read_geom(xyz_geom)
 A, B, C = me2d.external_rotc(atoms, coord)
+#print(me2d.suggest_rotatable_bonds(atoms, coord))
 B23 = me2d.internal_rotc(atoms, coord, 2, 3) # rotor around C2-C3 axis
 B12 = me2d.internal_rotc(atoms, coord, 1, 2) # rotor around C1-C2 axis
 print("CH3CH2CH2: A = %g [cm^-1]" % (A))

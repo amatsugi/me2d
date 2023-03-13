@@ -16,11 +16,13 @@
 class MESingle: public MESolver {
 public:
   enum {
-    ErrChkSum = -121, ErrChkSym = 122
+    ErrChkSum = -121, ErrChkSym = -122
   };
-  double TOL_NormSum, TOL_SymBase, TOL_Sym;
+  double TOL_NormSum, TOL_NormSum_Warn, TOL_SymBase, TOL_Sym;
 public:
-  MESingle() : TOL_NormSum(1e-6), TOL_SymBase(1e-128), TOL_Sym(1e-6) {}
+  MESingle()
+       : TOL_NormSum(1e-3), TOL_NormSum_Warn(1e-6),
+         TOL_SymBase(1e-128), TOL_Sym(1e-6) {}
   ~MESingle() {}
   
   int init_dens(int64_t nsiz);

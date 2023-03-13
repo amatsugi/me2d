@@ -156,8 +156,8 @@ class ME1D(MEBase):
     @classmethod
     def read_from(cls, fn, maxE=None, offset0=None):
         """ read E-resolved rho and k[ch] from rrkmE file, and return an instance of the class """
-        dE, rhol, kl = read1d(fn, maxE=maxE)
-        return cls(dE, rhol, kl, offset0=offset0)
+        dE, rho, kl = read1d(fn, maxE=maxE)
+        return cls(dE, rho, kl, offset0=offset0)
     
     
     def __init__(self, dE, rhoa, kl, offset0=None):

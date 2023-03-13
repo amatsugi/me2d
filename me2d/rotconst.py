@@ -137,14 +137,17 @@ def internal_rotc(atoms, coordA, ipiv, itop, checktop=True):
     for i in range(3):
         lam += (alpha[1][i] * U)**2 / M + (beta[i])**2 / imom[i]
     Im = A - lam
-    B = 1. / (2.*Im) / constants.cm2eh # cm^-1
+    if Im == 0.: B = np.inf
+    else: B = 1. / (2.*Im) / constants.cm2eh # cm^-1
     return B
 
 
 max_bond_X = 1.8  # for X-Y (X != H and Y != H)
-max_bond_H1 = 1.4 # for X-H (X != H)
-max_bond_H2 = 1.0 # for H-H
+max_bond_H1 = 1.5 # for X-H (X != H)
+max_bond_H2 = 1.4 # for H-H
 max_bond_piv = 3.0  # between pivot atoms
+min_bond_rotate = 1.4  # for X-X rotatable bond
+max_bond_rotate = 2.4  # for X-X rotatable bond
 
 def max_bond(atom1, atom2):
     count = 0
@@ -172,13 +175,14 @@ def find_top(atoms, coordA, ipiv1, ipiv2):
     while True:
         for ir in rest:
             for it in itop:
-                if bmat[ir-1][it-1] < max_bond(atoms[ir-1], atoms[it-1]):
+                if bmat[ir-1][it-1] <= max_bond(atoms[ir-1], atoms[it-1]):
                     itop.append(ir)
                     rest.remove(ir)
                     break
         if len(itop) == num_prev: break
         num_prev = len(itop)
     return tuple(itop)
+
 
 def check_top(atoms, coordA, ipiv, itop):
     """ check ipiv and itop """
@@ -219,6 +223,40 @@ def check_top(atoms, coordA, ipiv, itop):
                        "to atom #%d in top") % (i+1, itop[j]))
     
     return
+
+
+def suggest_rotatable_bonds(atoms, coordA):
+    coordA = [np.array(x) for x in coordA]
+    n = len(coordA)
+    bmat = np.zeros((n, n))
+    for i in range(n):
+        for j in range(n):
+            bmat[i][j] = np.linalg.norm(coordA[i] - coordA[j])
+    pivots = []
+    for ia1 in range(len(atoms)):
+        if atoms[ia1] in ("H", "h"): continue
+        sbond1 = []
+        for ia2 in range(len(atoms)):
+            if (ia1 != ia2) and (atoms[ia2] not in ("H", "h")):
+                r = bmat[ia1][ia2]
+                if min_bond_rotate <= r <= max_bond_rotate: sbond1.append(ia2)
+        for ia2 in sbond1:
+            piv1 = ia1 + 1
+            piv2 = ia2 + 1
+            itop = find_top(atoms, coordA, piv1, piv2)
+            itopr = find_top(atoms, coordA, piv2, piv1)
+            if len(itop) <= 2 or len(itopr) <= 2: continue
+            sumlen = len(itop) + len(itopr)
+            if sumlen > len(atoms): continue
+            if len(set(list(itop) + list(itopr))) != sumlen: continue
+            B = internal_rotc(atoms, coordA, piv1, itop)
+            if B <= 0. or B > 100: continue
+            duplicate = False
+            for x in pivots:
+                if x[0] == piv2 and x[1] == piv1 and abs(x[2] - B) < 1e-6: duplicate = True
+            if duplicate: continue
+            pivots.append((piv1, piv2, B))
+    return pivots
 
 
 def read_geom_xyzfile(xyzfn):

@@ -102,6 +102,7 @@ def rrkmE(maxE, dE, rovibm, rovibcl, E0l, deltaH0l, convK=True, convJ=True,
                 ofp.write("#   rho devided by B**(dim/2)*sig\n")
         ofp.write("#   nbin, dE = %d, %g\n" % (nbin, dE))
         ofp.write("#   nchan = %d\n" % (nchan))
+        if hasattr(ofp, "flush"): ofp.flush()
 
     if rho_sums is None:
         rho = rovibm.dens(nbin, dE, convK=convK, convJ=convJ, dEint=dEint)
@@ -115,8 +116,8 @@ def rrkmE(maxE, dE, rovibm, rovibcl, E0l, deltaH0l, convK=True, convJ=True,
         rovibc, E0, deltaH0 = rovibcl[ich], E0l[ich], deltaH0l[ich]
         nE0 = int(E0/float(dE))
         naboveE0 = nbin - nE0
-        if ((rovibc.freqimg is not None) and (deltaH0 is not None)
-            and (E0 > deltaH0 + dE)):
+        if ((rovibc.freqimg is not None) and (rovibc.freqimg > 0.) and (deltaH0 is not None)
+            and (E0 > deltaH0 + dE) and (nE0 > 0)):
             tunnel = True
             # add some bins to ensure convergence in tunneling calcn.
             nadd = max(int(nbin/100), 10)
@@ -132,7 +133,8 @@ def rrkmE(maxE, dE, rovibm, rovibcl, E0l, deltaH0l, convK=True, convJ=True,
                                  % (len(rho_sums[1][ich]), ntmps))
             tmps = np.copy(rho_sums[1][ich])[:ntmps]
         sums = np.zeros(nbin+nadd)
-        sums[nE0:] += tmps
+        if nE0 >= 0: sums[nE0:] += tmps
+        else: sums += tmps[-nE0:]
         if tunnel: sums = tunnel_eck(sums, dE, E0, deltaH0, rovibc.freqimg)
         
         k = np.zeros(nbin)
@@ -143,16 +145,16 @@ def rrkmE(maxE, dE, rovibm, rovibcl, E0l, deltaH0l, convK=True, convJ=True,
         if (not convJ) and centcorr: # centrifugal correction
             if centcorr is True: pwr = 1. # default is 2D
             else: pwr = 0.5*centcorr # centcorr is dimension
-            k *= rovibm.nsym/rovibc.nsym * (rovibm.rotB2D/rovibc.rotB2D)**pwr
+            k *= (rovibm.rotB2D/rovibc.rotB2D)**pwr  # nsym is already accounted for in mod_bs
         if klow is not None:
             for i in range(nbin):
                 if k[i] < klow: k[i] = 0.
         kl.append(k)
 
-    if (not convJ) and centcorr:  # devide rho by nsym * B**(dim/2)
+    if (not convJ) and centcorr:  # devide rho by B**(dim/2)
         if centcorr is True: pwr = 1. # default is 2D
         else: pwr = 0.5*centcorr # centcorr is dimension
-        rho /= rovibm.nsym * rovibm.rotB2D**pwr
+        rho /= rovibm.rotB2D**pwr  # nsym is already accounted for in mod_bs
     
     if ofp is not None:
         # thermal rates
@@ -177,6 +179,7 @@ def rrkmE(maxE, dE, rovibm, rovibcl, E0l, deltaH0l, convK=True, convJ=True,
         for i in range(nbin):
             ofp.write(" %6d %12.6e %s\n" % 
                       (i*dE, rho[i], " ".join("%12.6e" % k[i] for k in kl)))
+        if hasattr(ofp, "flush"): ofp.flush()
     return rho, kl
 
 
@@ -206,6 +209,7 @@ def rrkmEJ(maxE, dE, maxJ, rovibm, rovibcl, E0l, deltaH0l, rotB2Dprodl,
         ofp.write("#   B2D = %g\n" % (rovibm.rotB2D))
         ofp.write("# E[cm-1] rho[cm] %s\n" % 
                   (" ".join("    k%02d[s-1]" % (ich+1) for ich in range(nchan))))
+        if hasattr(ofp, "flush"): ofp.flush()
 
     rho = rovibm.dens(nbin, dE, convK=True, convJ=False, dEint=dEint)
     sumsl = []

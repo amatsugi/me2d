@@ -58,8 +58,8 @@ def tstrates(T, rovibm, rovibcl, E0l, deltaH0l, convK=True, convJ=True):
         qc = rovibc.part(T, convK=convK, convJ=convJ)
         k = (constants.kb * T / constants.h) * (qc / qm) * \
             np.exp(- E0 * constants.cm2k / T)
-        if ((rovibc.freqimg is not None) and (deltaH0 is not None)
-            and (E0 > deltaH0)):
+        if ((rovibc.freqimg is not None) and (rovibc.freqimg > 0.) and (deltaH0 is not None)
+            and (E0 > deltaH0) and (E0 > 0.)):
             k *= tunnel_eck_T(T, E0, deltaH0, rovibc.freqimg)
         kl.append(k)
     return kl
@@ -94,7 +94,7 @@ def bimol_tstrate(T, rovib_reac1, rovib_reac2, rovib_ts, gelec_reac1, gelec_reac
     
     k = (constants.kb * T / constants.h) * qtrans_ratio * qelec_ratio * qrovib_ratio * np.exp(- E0 * constants.cm2k / T)
     if ((rovib_ts.freqimg is not None) and (deltaH0 is not None)
-        and (E0 > deltaH0)):
+        and (E0 > deltaH0) and (E0 > 0.)):
         k *= tunnel_eck_T(T, E0, deltaH0, rovib_ts.freqimg)
     return k
 

@@ -38,7 +38,7 @@ def read1d(fn, maxE=None):
         
     rho = np.array(rhol)
     kl = [np.array(kl[ich]) for ich in range(nchan)]
-    return dE, rhol, kl
+    return dE, rho, kl
 
 
 def read2d(fn, dJ, maxE=None, maxJ=None):
@@ -154,9 +154,9 @@ def merge1d(fn, fn_chl):
 
 
 def merge2d(fn, fn_chl):
-    """ merge multiple rrkmE files
+    """ merge multiple rrkmEJ files
     fn: output file name
-    fn_chl: list of tuples (filename, channel_index) for k(E)  (index starts from 1)
+    fn_chl: list of tuples (filename, channel_index) for k(E,J)  (index starts from 1)
     """
     ofp = open(fn, "w")
     ofp.write("# rho(E,J) and k(E,J) from:\n")

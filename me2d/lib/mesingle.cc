@@ -187,7 +187,7 @@ int MESingle::normalize() {
 int MESingle::check_sum() {
   int res;
   int64_t i, j, ilow, ihigh, bp1=bwidth+1;
-  double Usum;
+  double Usum, maxdev=0.;
   double *sums = nullptr;
   if ((res = allocate_array(sums, nsiz)) < 0) { return res; }
   
@@ -204,14 +204,17 @@ int MESingle::check_sum() {
     else if (me_type == Dens) {
       for (j=0; j<nsiz; j++) { Usum += U[i + j*nsiz]; }
     }
-    sums[i] = fabs(Usum - 1.);
+    sums[i] = Usum;
   }
   for (i=0; i<nsiz; i++) {
-    if (sums[i] > TOL_NormSum) {
-      cout << "ERROR: check_sum: normalized sum != 1" << endl;
-      delete_array(sums, nsiz);
-      return ErrChkSum;
-    }
+    if (fabs(sums[i]-1.) > fabs(maxdev)) { maxdev = sums[i]-1.; }
+  }
+  if (maxdev > TOL_NormSum) {
+    cout << "ERROR: check_sum: normalized sum != 1 (max. deviation = " << maxdev << ")" << endl;
+    delete_array(sums, nsiz);
+    return ErrChkSum;
+  } else if (maxdev > TOL_NormSum_Warn) {
+    cout << "WARNING: check_sum: max. deviation in normalized sums = " << maxdev << endl;
   }
   delete_array(sums, nsiz);
   return 0;

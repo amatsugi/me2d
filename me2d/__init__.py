@@ -17,6 +17,7 @@ from .rotconst import external_rotc
 from .rotconst import internal_rotc
 from .rotconst import find_top
 from .rotconst import check_top
+from .rotconst import suggest_rotatable_bonds
 
 from .rrkm import rrkmE
 from .rrkm import rrkmEJ

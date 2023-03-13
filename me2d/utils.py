@@ -50,7 +50,7 @@ def name2atoms(name):
     return l2
 
 
-def findmin(x, y):
+def findmin(x, y, critratio=0.8):
     minind = list(y).index(min(y))
     if minind == 0:
         x1, x2, x3 = x[minind], x[minind+1], x[minind+2]
@@ -66,7 +66,8 @@ def findmin(x, y):
     c = y1 - a*x1*x1 - b*x1
     xmin = -b / (2. * a)
     ymin = a * xmin * xmin + b * xmin + c
-    if (ymin > y[minind]) or (xmin < min(x)) or (xmin > max(x)):
+    if (ymin > y[minind]) or (xmin < min(x)) or (xmin > max(x)) or (ymin < y[minind]*critratio):
+        # interpolation would fail for these conditions
         xmin = x[minind]
         ymin = y[minind]
     return xmin, ymin
