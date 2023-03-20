@@ -2,7 +2,8 @@ CXX = g++
 CXXFLAGS = -O2 -march=native -std=c++11 -Wall -Wextra -Wconversion -pedantic -fPIC -fopenmp
 
 # ---- LAPACK/BLAS library ----
-LDLAPACK = -lopenblas
+#LDLAPACK = -lopenblas
+LDLAPACK = -lopenblasp
 #LDLAPACK = -L$(MKLROOT)/lib/intel64 -Wl,--no-as-needed -lmkl_rt -lpthread -lm -ldl
 #LDLAPACK = -lblas -llapack -lgfortran -lm
 

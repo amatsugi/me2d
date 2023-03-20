@@ -36,6 +36,7 @@ void MESolver::show_solvers() {
     for InvIter solver:
       - maxit: maximum number of iterations (default:100)
       - rtol: relative tolerance for convergence (default:1e-6)
+      - rtol_norm: relative tolerance of vector norm for convergence (default:1e-4)
     for EigIter solver:
       - maxit: maximum number of iterations (default:100)
       - rtol: relative tolerance for convergence (default:1e-6)
@@ -160,6 +161,8 @@ int MESolver::set_solver_option(std::string option_str) {
           { InvIter_MaxIter = stoi(val); oss << "InvIter_MaxIter set to " << InvIter_MaxIter; }
         else if (keyeq(key, "rtol"))
           { InvIter_RTol = stod(val); oss << "InvIter_RTol set to " << InvIter_RTol; }
+        else if (keyeq(key, "rtol_norm"))
+          { InvIter_RTol_Norm = stod(val); oss << "InvIter_RTol set_Norm to " << InvIter_RTol_Norm; }
       }
       if (solver == EigIter) {
         if (keyeq(key, "maxit"))
@@ -234,13 +237,16 @@ int MESolver::solve(int64_t neig, double *vals, double *z) {
 int MESolver::inverse_iteration(double &val, double *b) {
   int64_t i, it=0;
   int res;
-  double rtol, sumb, relnorm, relval, val0=0.;
+  double rtol, rtol_norm, sumb, relnorm, relval, val0=0.;
   double *b0 = nullptr;
   
   if (InvIter_RTol >= std::numeric_limits<double>::epsilon()) { rtol = InvIter_RTol; }
   else { rtol = std::numeric_limits<double>::epsilon(); }
-  if (verbose > 0) { cout << "inverse_iteration: rtol = " << rtol << endl; }
-  
+  if (InvIter_RTol_Norm >= std::numeric_limits<double>::epsilon()) { rtol_norm = InvIter_RTol_Norm; }
+  else { rtol_norm = std::numeric_limits<double>::epsilon(); }
+  if (verbose > 0) {
+    cout << "inverse_iteration: rtol = " << rtol << ", " <<  rtol_norm << endl;
+  }
   
   symmetrize_vector(b); normalize_vector(b);  // symmetrize initial guess vector
   invert_sign(); // invert sign to be positive definite
@@ -272,7 +278,7 @@ int MESolver::inverse_iteration(double &val, double *b) {
       cout << "inverse_iteration: it = " << it << ", relative residuals = "
         << relval << ", " << relnorm << endl;
     }
-    if ((relval < rtol) && (relnorm < rtol)) { break; }
+    if ((relval < rtol) && (relnorm < rtol_norm)) { break; }
   }
   delete_array(b0, nsiz);
   linear_solver_clear();
