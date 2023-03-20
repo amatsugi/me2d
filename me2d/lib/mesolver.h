@@ -26,6 +26,7 @@ public:
   int64_t InvIter_MaxIter;
   double InvIter_RTol;
   double InvIter_RTol_Norm;
+  double InvIter_FAcc;
   arpack_int Arpack_MaxIter;
   double Arpack_Tol;
   int64_t CG_MaxIter;
@@ -49,7 +50,7 @@ public:
   MESolver()
        : me_type(Dens), solver(InvIter), linear_solver(LsCHO), eigen_solver(EsDSYEVR),
          preconditioner(PcBand),
-         InvIter_MaxIter(100), InvIter_RTol(1e-6), InvIter_RTol_Norm(1e-4),
+         InvIter_MaxIter(100), InvIter_RTol(1e-6), InvIter_RTol_Norm(1e-4), InvIter_FAcc(10.),
          Arpack_MaxIter(100), Arpack_Tol(1e-6),
          CG_MaxIter(2000), CG_RTol(1e-12), CG_RTol_Semiquad(-1.), CG_guess_stored(0),
          nsiz(0), bwidth(0),

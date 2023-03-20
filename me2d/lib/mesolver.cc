@@ -37,6 +37,7 @@ void MESolver::show_solvers() {
       - maxit: maximum number of iterations (default:100)
       - rtol: relative tolerance for convergence (default:1e-6)
       - rtol_norm: relative tolerance of vector norm for convergence (default:1e-4)
+      - facc: acceleration factor for dealing with slow convergency (default:10.)
     for EigIter solver:
       - maxit: maximum number of iterations (default:100)
       - rtol: relative tolerance for convergence (default:1e-6)
@@ -162,7 +163,9 @@ int MESolver::set_solver_option(std::string option_str) {
         else if (keyeq(key, "rtol"))
           { InvIter_RTol = stod(val); oss << "InvIter_RTol set to " << InvIter_RTol; }
         else if (keyeq(key, "rtol_norm"))
-          { InvIter_RTol_Norm = stod(val); oss << "InvIter_RTol set_Norm to " << InvIter_RTol_Norm; }
+          { InvIter_RTol_Norm = stod(val); oss << "InvIter_RTol_Norm set to " << InvIter_RTol_Norm; }
+        else if (keyeq(key, "facc"))
+          { InvIter_FAcc = stod(val); oss << "InvIter_FAcc set to " << InvIter_FAcc; }
       }
       if (solver == EigIter) {
         if (keyeq(key, "maxit"))
@@ -235,9 +238,9 @@ int MESolver::solve(int64_t neig, double *vals, double *z) {
 
 
 int MESolver::inverse_iteration(double &val, double *b) {
-  int64_t i, it=0;
+  int64_t i, it=0, it2=0;
   int res;
-  double rtol, rtol_norm, sumb, relnorm, relval, val0=0.;
+  double rtol, rtol_norm, sumb, relnorm, relval, relnorm_old, relval_old, val0=0.;
   double *b0 = nullptr;
   
   if (InvIter_RTol >= std::numeric_limits<double>::epsilon()) { rtol = InvIter_RTol; }
@@ -254,9 +257,9 @@ int MESolver::inverse_iteration(double &val, double *b) {
   if ((res = linear_solver_init()) < 0) { return res; }
   if ((res = allocate_array(b0, nsiz)) < 0) { return res; }
   
-  it = 0;
+  it = 0; it2 = 0;
   while (true) {
-    it++;
+    it++; it2++;
     if (it > InvIter_MaxIter) {
       cout << "ERROR: inverse_iteration: max iterations exceeded." << endl;
       delete_array(b0, nsiz); return ErrMaxIter;
@@ -279,6 +282,17 @@ int MESolver::inverse_iteration(double &val, double *b) {
         << relval << ", " << relnorm << endl;
     }
     if ((relval < rtol) && (relnorm < rtol_norm)) { break; }
+    if ((it2 > 100) && (((relval > rtol) && (relval > 0.99*relval_old)) ||
+                        ((relnorm > rtol_norm) && (relnorm > 0.99*relnorm_old)))) {
+      // accelerate vector update for slow convergency (possibly trapped at local near-steady state)
+      for (i=0; i<nsiz; i++) { b[i] = b[i] + InvIter_FAcc*b0[i]; }
+      if (verbose > 0)
+        { cout << "inverse_iteration: accelerated with facc = " << InvIter_FAcc << endl; }
+      if (it < 500) { it2 = 90; }
+      else { it2 = 95; }
+    }
+    relval_old = relval;
+    relnorm_old = relnorm;
   }
   delete_array(b0, nsiz);
   linear_solver_clear();
