@@ -59,25 +59,25 @@ def load_library(libname="libme2d"):
     lib.solve1d.argtypes = [CI64, CI64, DARR, DARR,
                             DARR, DARR, DARR,
                             CDBL, DARR, CI64,
-                            CDBL, CDBL, CDBL, CCHP, CI64]
+                            CDBL, CDBL, CDBL, CCHP, CCHP, CI64]
     lib.solve2d.restype = CI64
     lib.solve2d.argtypes = [CI64, CI64, DARR, DARR,
                             DARR, DARR, DARR, DARR, DARR,
                             CDBL, CDBL, DARR, DARR, CI64,
-                            CDBL, CDBL, CDBL, CCHP, CI64]
+                            CDBL, CDBL, CDBL, CCHP, CCHP, CI64]
     
     lib.solve1d_mw.restype = CI64
     lib.solve1d_mw.argtypes = [CI64, IARR, CI64, DARR, DARR,
                                DARR, DARR, DARR,
                                DARR, DARR, IARR,
                                CI64, DARR, IARR, IARR,
-                               DARR, DARR, CDBL, CCHP, CI64, CI64]
+                               DARR, DARR, CDBL, CCHP, CI64, CCHP, CI64]
     lib.solve2d_mw.restype = CI64
     lib.solve2d_mw.argtypes = [CI64, IARR, CI64, DARR, DARR,
                                DARR, DARR, DARR, DARR, DARR,
                                DARR, DARR, DARR, DARR, IARR,
                                CI64, DARR, IARR, IARR,
-                               DARR, DARR, CDBL, CCHP, CI64, CI64]
+                               DARR, DARR, CDBL, CCHP, CI64, CCHP, CI64]
     _lib = lib
     _libfn = libfn
     return _lib, _libfn

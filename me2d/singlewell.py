@@ -62,7 +62,7 @@ class MEBase(object):
 
     
     def solve(self, T, p, gguess=None, solver="", bandpcrit=1e-9, neig=1,
-              chemact_ch=None, verbose=False, nthreads=None, maxmemGB=None):
+              chemact_ch=None, verbose=False, nthreads=None, maxmemGB=None, chkfn=None):
         """ solve ME by calling solve1d or solve2d function of the library
         T: temperature in K
         p: pressure in bar
@@ -74,6 +74,7 @@ class MEBase(object):
         verbose: verbose flag (True/False or integer)
         nthreads: number of threads to be used in the computation
         maxmemGB: max memory size used by the solver in GB
+        chkfn: file name for storing matrix data (optional; used with the solver options save/load)
         """
         logfp = sys.stdout
         
@@ -82,6 +83,7 @@ class MEBase(object):
             max_threads_orig = get_num_threads()
             set_num_threads(nthreads)
         if maxmemGB is not None: self.lib.set_me_maxmem_GB(maxmemGB)
+        if chkfn is None: chkfn = ""
         
         if verbose:
             logfp.write("%s ver.%s: %s.solve started at %s\n"
@@ -125,13 +127,13 @@ class MEBase(object):
             res = self.lib.solve1d(self.nsiz, neig, vals, vec,
                                    self.Ea, self.rhoa, self.ka,
                                    self.y_e, self.ainv_ea, ptype,
-                                   bandpcrit, ZM, kbT, solver.encode(), verbose)
+                                   bandpcrit, ZM, kbT, solver.encode(), chkfn.encode(), verbose)
         else:
             ptype = 0 # symmetrized prob. given
             res = self.lib.solve2d(self.nsiz, neig, vals, vec,
                                    self.Ea, self.ea, self.Ja, self.rhoa, self.ka,
                                    self.y_e, self.y_J, self.ainv_ea, self.ainv_Ja, ptype,
-                                   bandpcrit, ZM, kbT, solver.encode(), verbose)
+                                   bandpcrit, ZM, kbT, solver.encode(), chkfn.encode(), verbose)
             
         if nthreads is not None:
             restore_num_threads(max_threads_orig)

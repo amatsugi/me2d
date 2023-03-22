@@ -299,7 +299,7 @@ class MEBaseMW(object):
 
     def solve(self, T, p, gguess=None, solver="", bandpcrit=1e-9, neig=1,
               reactant=None, chemact_well_ch=None,
-              verbose=False, nthreads=None, maxmemGB=None):
+              verbose=False, nthreads=None, maxmemGB=None, chkfn=None):
         """ solve ME by calling solve1d or solve2d function of the library
         T: temperature in K
         p: pressure in bar
@@ -312,6 +312,7 @@ class MEBaseMW(object):
         verbose: verbose flag (True/False or integer)
         nthreads: number of threads to be used in the computation
         maxmemGB: max memory size used by the solver in GB
+        chkfn: file name for storing matrix data (optional; used with the solver options save/load)
         """
         logfp = sys.stdout
         
@@ -327,6 +328,7 @@ class MEBaseMW(object):
             max_threads_orig = get_num_threads()
             set_num_threads(nthreads)
         if maxmemGB is not None: self.lib.set_me_maxmem_GB(maxmemGB)
+        if chkfn is None: chkfn = ""
         
         if verbose:
             logfp.write("%s ver.%s: %s.solve started at %s\n"
@@ -383,7 +385,8 @@ class MEBaseMW(object):
                                       y_e, ainv_ea, ptype,
                                       len(self.kisom_sym), self.kisom_sym,
                                       self.kisom_i, self.kisom_j,
-                                      bandpcrit, ZM, kbT, solver.encode(), reactant, verbose)
+                                      bandpcrit, ZM, kbT, solver.encode(), 
+                                      reactant, chkfn.encode(), verbose)
         else:
             y_e = np.array([well.y_e for well in self.wells])
             y_J = np.array([well.y_J for well in self.wells])
@@ -395,7 +398,8 @@ class MEBaseMW(object):
                                       y_e, y_J, ainv_ea, ainv_Ja, ptype,
                                       len(self.kisom_sym), self.kisom_sym,
                                       self.kisom_i, self.kisom_j,
-                                      bandpcrit, ZM, kbT, solver.encode(), reactant, verbose)
+                                      bandpcrit, ZM, kbT, solver.encode(), 
+                                      reactant, chkfn.encode(), verbose)
         
         if nthreads is not None:
             restore_num_threads(max_threads_orig)

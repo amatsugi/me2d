@@ -4,16 +4,16 @@
 n-,s-C5H11 system: thermal decomposition / chemical activation
 (two-well, two-channel, 1D MEs as a function of E)
 
-Steady-state & phenomenological rate constants from steady-state MEs
+Steady-state & phenomenological rate constants from steady-state MEs using the CG solver
 
-sample output (c5h11_4_me1d_E_ss.dat):
+sample output (c5h11_4a_me1d_E_ss.dat):
    T[K]    p[bar]       w1->w1-ch2     w1->w2-ch2     w2->w1-ch2     w2->w2-ch2 w1-ch2->w1-ch2 w1-ch2->w2-ch2 w2-ch2->w1-ch2 w2-ch2->w2-ch2
   1000.0  1.000e+02     4.7452e+06     3.2981e+06     3.6804e+05     9.9474e+06     5.1404e-15     3.4269e-15     6.3556e-17     1.7711e-15
   1000.0  1.000e+01     3.5927e+06     2.8640e+06     2.9325e+05     7.3814e+06     5.2311e-15     3.3362e-15     6.1873e-17     1.7728e-15
   1000.0  1.000e+00     1.6175e+06     1.8428e+06     1.5625e+05     3.5264e+06     5.4001e-15     3.1672e-15     5.8739e-17     1.7759e-15
   1000.0  1.000e-01     3.8500e+05     7.9742e+05     5.1685e+04     1.0900e+06     5.5479e-15     3.0194e-15     5.5998e-17     1.7787e-15
 
-sample output (c5h11_4_me1d_E_phenom.dat):
+sample output (c5h11_4a_me1d_E_phenom.dat):
    T[K]    p[bar]       w1->w1-ch2     w2->w1-ch2     w1->w2-ch2     w2->w2-ch2         w2->w1         w1->w2     w1-ch2->w1     w1-ch2->w2 w1-ch2(no-rxn) w1-ch2->w2-ch2     w2-ch2->w1     w2-ch2->w2 w2-ch2->w1-ch2 w2-ch2(no-rxn)
   1000.0  1.000e+02     6.7929e+06     1.0100e+04     1.8738e+05     1.0491e+07     6.5773e+05     4.8258e+06     8.1047e-15     8.8308e-17     3.5575e-16     1.8503e-17     4.1437e-18     1.7032e-15     3.4319e-19     1.2694e-16
   1000.0  1.000e+01     5.1834e+06     3.5558e+04     6.8599e+05     7.7342e+06     5.0427e+05     3.7001e+06     6.1872e-15     3.0855e-16     1.7766e-15     2.9498e-16     1.5132e-17     1.2557e-15     5.4739e-18     5.5836e-16
@@ -31,8 +31,8 @@ well_list = [("w1", "c5h11_1_rrkmE_nc5h11_dE10.dat", 948.38),
 # list of ((name, ch), (name, ch))
 connections = [(("w1", 1), ("w2", 1))]
 
-outfn_ss = "c5h11_4_me1d_E_ss.dat"
-outfn_ph = "c5h11_4_me1d_E_phenom.dat"
+outfn_ss = "c5h11_4a_me1d_E_ss.dat"
+outfn_ph = "c5h11_4a_me1d_E_phenom.dat"
 
 solver = "InvIter,cg" # inverse iteration with conjugate gradient
 neig = 1              # neig = 1 for InvIter solver
