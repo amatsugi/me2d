@@ -3,6 +3,7 @@
 #include "extlib.h"
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <cmath>
@@ -41,6 +42,10 @@ void MESolver::show_solvers() {
     for EigIter solver:
       - maxit: maximum number of iterations (default:100)
       - rtol: relative tolerance for convergence (default:1e-6)
+    for CHO/LU/LDLT linear_solver:
+      - chk=none: do not use chkfn (default)
+      - chk=save: factorized array to chkfn
+      - chk=load: load factorized array from chkfn
     for CG linear_solver:
       - CG_maxit: maximum number of iterations (default:2000)
       - CG_rtol: relative tolerance for convergence (default:1e-12)
@@ -65,7 +70,6 @@ int MESolver::set_solver(std::string solver_str) {
   if (me_type == Dens) { oss << "dense matrix"; }
   else if (me_type == Band) { oss << "banded matrix"; }
   else if (me_type == MW) { oss << "multiple-well"; }
-  else if (me_type == MWDens) { oss << "multiple-well (use full matrix)"; }
   
   if (n == 0) { // default solver = InvIter
     solver = InvIter; oss << ", inverse iteration";
@@ -136,7 +140,7 @@ int MESolver::set_solver(std::string solver_str) {
       if (verbose > 0) { cout << "set_solver: the solver does not require full matrix." << endl; }
     }
     else {
-      me_type = MWDens;
+      me_type = Dens;
       if (verbose > 0) { cout << "set_solver: the solver requires full matrix." << endl; }
     }
   }
@@ -173,6 +177,16 @@ int MESolver::set_solver_option(std::string option_str) {
         else if (keyeq(key, "rtol"))
           { Arpack_Tol = stod(val); oss << "Arpack_Tol set to " << Arpack_Tol; }
       }
+      
+      if (((solver == InvIter) || (solver == EigIter) || (solver == LinEq))
+          && ((linear_solver == LsCHO) || (linear_solver == LsLU) || (linear_solver == LsLDLT))) {
+        if (keyeq(key, "chk")) {
+          if (keyeq(val, "none")) { chk_mode = ChkNone; oss << "chk = none"; }
+          if (keyeq(val, "save")) { chk_mode = ChkSave; oss << "chk = save"; }
+          if (keyeq(val, "load")) { chk_mode = ChkLoad; oss << "chk = load"; }
+        }
+      }
+      
       if (((solver == InvIter) || (solver == EigIter) || (solver == LinEq))
           && (linear_solver == LsCG)) {
         if (keyeq(key, "CG_maxit"))
@@ -184,10 +198,7 @@ int MESolver::set_solver_option(std::string option_str) {
         else if (keyeq(key, "Pc_relb")) {
           Pc_RelB = stod(val);
           oss << "Pc_RelB set to " << Pc_RelB;
-          if (Pc_RelB == 0.) {
-            preconditioner = PcDiag;
-            oss << " (use diagonal preconditioner)";
-          }
+          if (Pc_RelB == 0.) { preconditioner = PcDiag; oss << " (use diagonal preconditioner)"; }
           else { preconditioner = PcBand; }
         }
       }
@@ -209,6 +220,28 @@ int MESolver::set_solver_option(std::string option_str) {
   }
   else if (verbose > 0) {
     cout << "set_solver_option: option " << oss.str() << endl;
+  }
+  return 0;
+}
+
+int MESolver::set_chkfn(std::string chkfn_str) {
+  std::ifstream inf;
+  std::ofstream outf;
+  if (chk_mode == ChkNone) { chkfn.erase(); return 0; }
+  else if (chkfn_str.empty()) { cout << "ERROR: set_chkfn: chkfn not given." << endl ; return ErrChk; }
+  
+  chkfn = chkfn_str;
+  if (verbose > 0) { cout << "set_chkfn: set chkfn = " << chkfn << endl; }
+  // touch file to check availability
+  if (chk_mode == ChkSave) {
+    outf.open(chkfn.c_str(), std::ios::binary);
+    if (!outf) { cout << "ERROR: set_chkfn: failed to open " << chkfn << endl ; return ErrChk; }
+    outf.close();
+  }
+  if (chk_mode == ChkLoad) {
+    inf.open(chkfn.c_str(), std::ios::binary);
+    if (!inf) { cout << "ERROR: set_chkfn: failed to open " << chkfn << endl ; return ErrChk; }
+    inf.close();
   }
   return 0;
 }
@@ -240,7 +273,7 @@ int MESolver::solve(int64_t neig, double *vals, double *z) {
 int MESolver::inverse_iteration(double &val, double *b) {
   int64_t i, it=0, it2=0;
   int res;
-  double rtol, rtol_norm, sumb, relnorm, relval, relnorm_old, relval_old, val0=0.;
+  double rtol, rtol_norm, sumb, relnorm, relval, relnorm_old=0., relval_old=0., val0=0.;
   double *b0 = nullptr;
   
   if (InvIter_RTol >= std::numeric_limits<double>::epsilon()) { rtol = InvIter_RTol; }
@@ -449,8 +482,9 @@ int MESolver::linear_solver_init() {
   double *work = nullptr;
   char uplo='U';
   std::string routine;
-  
-  if ((me_type == Band) && (linear_solver == LsCHO)) { routine = "DPBTRF"; }
+
+  if (chk_mode == ChkLoad) { routine = "LOAD_CHK"; }
+  else if ((me_type == Band) && (linear_solver == LsCHO)) { routine = "DPBTRF"; }
   else if ((me_type == Dens) && (linear_solver == LsCHO)) { routine = "DPOTRF"; }
   else if ((me_type == Dens) && (linear_solver == LsLU)) { routine = "DGETRF"; }
   else if ((me_type == Dens) && (linear_solver == LsLDLT)) { routine = "DSYTRF"; }
@@ -472,13 +506,22 @@ int MESolver::linear_solver_init() {
   }
   
   // apply rate constants to U for direct solvers
-  if ((linear_solver == LsCHO) || (linear_solver == LsLU)
-      || (linear_solver == LsLDLT)) { apply_rates(); }
+  if ((linear_solver == LsCHO) || (linear_solver == LsLU) || (linear_solver == LsLDLT)) { apply_rates(); }
+  
+  // work array used for checking consistency in ChkSave/Load
+  if ((chk_mode == ChkSave) || (chk_mode == ChkLoad)) {
+    if ((res = allocate_array(dwork_chk, nsiz*2)) < 0) { return res; }
+    dwork_chk_size = nsiz*2;
+    reduced_banded_U(dwork_chk, 1); // diagonal and subdiagonal elements 
+  }
   
   if (verbose > 0)
     { cout << "linear_solver_init: calling " << routine << "..." << endl; }
   
-  if ((me_type == Band) && (linear_solver == LsCHO))
+  if (chk_mode == ChkLoad) {
+    if ((res = linear_solver_load_chk()) < 0) { return res; }
+  }
+  else if ((me_type == Band) && (linear_solver == LsCHO))
     { LAPACK(dpbtrf)(uplo, N, kd, U, ldab, info); }
   else if ((me_type == Dens) && (linear_solver == LsCHO))
     { LAPACK(dpotrf)(uplo, N, U, N, info); }
@@ -506,6 +549,98 @@ int MESolver::linear_solver_init() {
     cout << "ERROR: linear_solver_init: " << routine << " info = " << info << endl;
     return ErrLapack;
   }
+  
+  if (chk_mode == ChkSave) {
+    if ((res = linear_solver_save_chk()) < 0) { return res; }
+  }
+  return 0;
+}
+
+
+int MESolver::linear_solver_save_chk() {
+  int64_t header[5];
+  int64_t i;
+  std::ofstream outf;
+  outf.open(chkfn.c_str(), std::ios::binary);
+  if (!outf) { cout << "ERROR: linear_solver_save_chk: failed to open " << chkfn << endl ; return ErrChk; }
+  
+  // header: me_type, linear_solver, dwork_chk_size, ipiv_size, U_size
+  header[0] = static_cast<int64_t>(me_type);
+  header[1] = static_cast<int64_t>(linear_solver);
+  header[2] = dwork_chk_size;
+  header[3] = ipiv_size;
+  header[4] = U_size;
+  outf.write((char*)header, 5*sizeof(int64_t));
+  
+  // array: dwork_chk, ipiv, U
+  outf.write((char*)dwork_chk, dwork_chk_size*sizeof(double));
+  outf.write((char*)ipiv, ipiv_size*sizeof(lapack_int));
+  for (i=0; i<U_size/nsiz; i++) { outf.write((char*)&U[i*nsiz], nsiz*sizeof(double)); }
+  if (!outf)
+    { cout << "ERROR: linear_solver_save_chk: failed to write array " << endl ; outf.close(); return ErrChk; }
+  outf.close();
+  if (verbose > 0)
+    { cout << "linear_solver_save_chk: factorized array saved to " << chkfn << endl; }
+  return 0;
+}
+
+int MESolver::linear_solver_load_chk() {
+  int64_t header[5];
+  int64_t i;
+  double val, dif, difmax=0.;
+  std::ifstream inf;
+  inf.open(chkfn.c_str(), std::ios::binary);
+  if (!inf) { cout << "ERROR: linear_solver_load_chk: failed to open " << chkfn << endl ; return ErrChk; }
+
+  inf.read((char*)header, 5*sizeof(int64_t));
+  if (!inf)
+    { cout << "ERROR: linear_solver_load_chk: failed to read header" << endl; inf.close(); return ErrChk; }
+  if (header[0] != static_cast<int64_t>(me_type)) {
+    cout << "ERROR: linear_solver_load_chk: unmatched me_type (expected: "
+      << static_cast<int64_t>(me_type) << ", got: " << header[0] << ")" << endl;
+    inf.close(); return ErrChk;
+  }
+  if (header[1] != static_cast<int64_t>(linear_solver)) {
+    cout << "ERROR: linear_solver_load_chk: unmatched linear_solver (expected: "
+      << static_cast<int64_t>(linear_solver) << ", got: " << header[1] << ")" << endl;
+    inf.close(); return ErrChk;
+  }
+  if (header[2] != dwork_chk_size) {
+    cout << "ERROR: linear_solver_load_chk: unmatched dwork_chk_size (expected: "
+      << ipiv_size << ", got: " << header[2] << ")" << endl;
+    inf.close(); return ErrChk;
+  }
+  if (header[3] != ipiv_size) {
+    cout << "ERROR: linear_solver_load_chk: unmatched ipiv_size (expected: "
+      << ipiv_size << ", got: " << header[3] << ")" << endl;
+    inf.close(); return ErrChk;
+  }
+  if (header[4] != U_size) {
+    cout << "ERROR: linear_solver_load_chk: unmatched U_size (expected: "
+      << U_size << ", got: " << header[4] << ")" << endl;
+    inf.close(); return ErrChk;
+  }
+  
+  // read dwork_chk and check if the values match
+  for (i=0; i<dwork_chk_size; i++) {
+    inf.read((char*)&val, sizeof(double));
+    if (dwork_chk[i] == 0.) { dif = std::fabs(val - dwork_chk[i]); }
+    else { dif = std::fabs((val - dwork_chk[i]) / dwork_chk[i]); }
+    if (dif > difmax) { difmax = dif; }
+  }
+  if (difmax > 1e-6)
+    { cout << "WARNING: linear_solver_load_chk: difmax = " << difmax << endl; }
+  
+  inf.read((char*)ipiv, ipiv_size*sizeof(lapack_int));
+  for (i=0; i<U_size/nsiz; i++) { inf.read((char*)&U[i*nsiz], nsiz*sizeof(double)); }
+  if (!inf) {
+    cout << "ERROR: linear_solver_load_chk: failed to read array" << endl;
+    inf.close(); return ErrChk;
+  }
+  
+  inf.close();
+  if (verbose > 0)
+    { cout << "linear_solver_load_chk: factorized array loaded from " << chkfn << endl; }
   return 0;
 }
 
@@ -556,6 +691,7 @@ int MESolver::linear_solver_solve(double *b) {
 
 void MESolver::linear_solver_clear(){
   delete_array(ipiv, ipiv_size); ipiv_size = 0;
+  delete_array(dwork_chk, dwork_chk_size); dwork_chk_size = 0;
   delete_array(dwork_cg, dwork_cg_size); dwork_cg_size = 0;
   delete_array(qwork_cg, qwork_cg_size); qwork_cg_size = 0;
   delete_array(dwork_pc, dwork_pc_size); dwork_pc_size = 0;

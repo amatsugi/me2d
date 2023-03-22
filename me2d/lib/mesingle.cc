@@ -289,6 +289,7 @@ void MESingle::apply_rates() {
   int64_t i, bp1=bwidth+1;
   if (me_type == Band) { for (i=0; i<nsiz; i++) { U[bwidth+i*bp1] -= ka[i]; } }
   else if (me_type == Dens) { for (i=0; i<nsiz; i++) { U[i*nsiz + i] -= ka[i]; } }
+  rate_applied = true;
   return;
 }
 
@@ -322,7 +323,9 @@ void MESingle::multiply_U(double *x, double *y) {
     { BLAS(dsbmv)(uplo, N, K, alpha, U, lda, x, inc, beta, y, inc); }
   else if (me_type == Dens)
     { BLAS(dsymv)(uplo, N, alpha, U, N, x, inc, beta, y, inc); }
-  for (i=0; i<nsiz; i++) { y[i] -= ka[i] * x[i]; }
+  if (!rate_applied) {
+    for (i=0; i<nsiz; i++) { y[i] -= ka[i] * x[i]; }
+  }
   return;
 }
 
@@ -352,15 +355,18 @@ void MESingle::multiply_U_semiquad(quad_float *x, quad_float *y) {
       for (j=0; j<nsiz; j++) { y[i] += U[i*nsiz+j] * x[j]; }
     }
   }
-  for (i=0; i<nsiz; i++) { y[i] -= ka[i] * x[i]; }
+  if (!rate_applied) {
+    for (i=0; i<nsiz; i++) { y[i] -= ka[i] * x[i]; }
+  }
   return;
 }
 
 
 void MESingle::diagonal_U(double *d) {
   int64_t i, bp1=bwidth+1;
-  if (me_type == Band) { for (i=0; i<nsiz; i++) { d[i] = U[bwidth+i*bp1] - ka[i]; } }
-  else if (me_type == Dens) { for (i=0; i<nsiz; i++) { d[i] = U[i*nsiz + i] - ka[i]; } }
+  if (me_type == Band) { for (i=0; i<nsiz; i++) { d[i] = U[bwidth+i*bp1]; } }
+  else if (me_type == Dens) { for (i=0; i<nsiz; i++) { d[i] = U[i*nsiz + i]; } }
+  if (!rate_applied) { for (i=0; i<nsiz; i++) { d[i] -= ka[i]; } }
   return;
 }
 
@@ -374,7 +380,7 @@ void MESingle::reduced_banded_U(double *bm, int64_t red_bw) {
         if ((j-i) < bp1) { bm[red_bw+i-j+j*red_bp1] = U[bwidth+i-j+j*bp1]; }
         else { bm[red_bw+i-j+j*red_bp1] = 0; }
       }
-      bm[red_bw+i*red_bp1] -= ka[i];
+      if (!rate_applied) { bm[red_bw+i*red_bp1] -= ka[i]; }
     }
   }
   else if (me_type == Dens) {
@@ -385,7 +391,7 @@ void MESingle::reduced_banded_U(double *bm, int64_t red_bw) {
         if (j < nsiz) { bm[red_bw+i-j+j*red_bp1] = U[i*nsiz+j]; }
         else { bm[red_bw+i-j+j*red_bp1] = 0; }
       }
-      bm[red_bw+i*red_bp1] -= ka[i];
+      if (!rate_applied) { bm[red_bw+i*red_bp1] -= ka[i]; }
     }
   }
   return;

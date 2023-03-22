@@ -30,6 +30,7 @@ interface for ME solvers
     double ZM: Z[M]
     double kbT: kbT
     char *solver: solver specification (see MESolver::show_solvers)
+    char *chkfn: file name for storing matrix data (used with the solver options save/load)
     int64_t verbose: verbose level
   
   [solve1d_mw, solve2d_mw] 1D/2D ME for multiple well system
@@ -58,6 +59,7 @@ interface for ME solvers
     double kbT: kbT
     char *solver: solver specification (see MESolver::show_solvers)
     int64_t reactant: index of reactant well (only for InvIter solver)
+    char *chkfn: file name for storing matrix data (used with the solver options save/load)
     int64_t verbose: verbose level
 
  */
@@ -77,7 +79,7 @@ void show_solvers() {
 int64_t solve1d(int64_t nsiz, int64_t neig, double *vals, double *z,
                 double *Ea, double *rhoa, double *ka,
                 double y_e, double *ainv_ea, int64_t ptype,
-                double bandpcrit, double ZM, double kbT, char *solver, int64_t verbose) {
+                double bandpcrit, double ZM, double kbT, char *solver, char *chkfn, int64_t verbose) {
   double *ea = Ea;  // ea is used in the probability function.
   double *Ja = nullptr; // set Ja = nullptr for 1D
   double *ainv_Ja = nullptr; // not referenced if Ja == nullptr
@@ -85,17 +87,17 @@ int64_t solve1d(int64_t nsiz, int64_t neig, double *vals, double *z,
   if (verbose > 0) { cout << "Solve 1D master equation." << endl; }
   return (int64_t)solve(nsiz, neig, vals, z, Ea, ea, Ja, rhoa, ka,
                         y_e, y_J, ainv_ea, ainv_Ja, ptype,
-                        bandpcrit, ZM, kbT, solver, verbose);
+                        bandpcrit, ZM, kbT, solver, chkfn, verbose);
 }
 
 int64_t solve2d(int64_t nsiz, int64_t neig, double *vals, double *z,
             double *Ea, double *ea, double *Ja, double *rhoa, double *ka,
             double y_e, double y_J, double *ainv_ea, double *ainv_Ja, int64_t ptype,
-            double bandpcrit, double ZM, double kbT, char *solver, int64_t verbose) {
+            double bandpcrit, double ZM, double kbT, char *solver, char *chkfn, int64_t verbose) {
   if (verbose > 0) { cout << "Solve 2D master equation." << endl; }
   return (int64_t)solve(nsiz, neig, vals, z, Ea, ea, Ja, rhoa, ka,
                         y_e, y_J, ainv_ea, ainv_Ja, ptype,
-                        bandpcrit, ZM, kbT, solver, verbose);
+                        bandpcrit, ZM, kbT, solver, chkfn, verbose);
 }
 
 
@@ -104,7 +106,7 @@ int64_t solve1d_mw(int64_t nwell, int64_t *nsiz, int64_t neig, double *vals, dou
                    double *y_e, double *ainv_ea, int64_t *ptype,
                    int64_t nkisom, double *kisom, int64_t *kisom_i, int64_t *kisom_j,
                    double *bandpcrit, double *ZM, double kbT,
-                   char *solver, int64_t reactant, int64_t verbose){
+                   char *solver, int64_t reactant, char *chkfn, int64_t verbose){
   double *ea = Ea;  // ea is used in the probability function.
   double *Ja = nullptr; // set Ja = nullptr for 1D
   double *ainv_Ja = nullptr; // not referenced if Ja == nullptr
@@ -113,7 +115,7 @@ int64_t solve1d_mw(int64_t nwell, int64_t *nsiz, int64_t neig, double *vals, dou
   return (int64_t)solve_mw(nwell, nsiz, neig, vals, z, Ea, ea, Ja, rhoa, ka,
                            y_e, y_J, ainv_ea, ainv_Ja, ptype,
                            nkisom, kisom, kisom_i, kisom_j,
-                           bandpcrit, ZM, kbT, solver, reactant, verbose);
+                           bandpcrit, ZM, kbT, solver, reactant, chkfn, verbose);
 }
 
 int64_t solve2d_mw(int64_t nwell, int64_t *nsiz, int64_t neig, double *vals, double *z,
@@ -121,22 +123,23 @@ int64_t solve2d_mw(int64_t nwell, int64_t *nsiz, int64_t neig, double *vals, dou
                    double *y_e, double *y_J, double *ainv_ea, double *ainv_Ja, int64_t *ptype,
                    int64_t nkisom, double *kisom, int64_t *kisom_i, int64_t *kisom_j,
                    double *bandpcrit, double *ZM, double kbT,
-                   char *solver, int64_t reactant, int64_t verbose){
+                   char *solver, int64_t reactant, char *chkfn, int64_t verbose){
   if (verbose > 0) { cout << "Solve multiple-well 2D master equation." << endl; }
   return (int64_t)solve_mw(nwell, nsiz, neig, vals, z, Ea, ea, Ja, rhoa, ka,
                            y_e, y_J, ainv_ea, ainv_Ja, ptype,
                            nkisom, kisom, kisom_i, kisom_j,
-                           bandpcrit, ZM, kbT, solver, reactant, verbose);
+                           bandpcrit, ZM, kbT, solver, reactant, chkfn, verbose);
 }
 
 
 int solve(int64_t nsiz, int64_t neig, double *vals, double *z,
           double *Ea, double *ea, double *Ja, double *rhoa, double *ka,
           double y_e, double y_J, double *ainv_ea, double *ainv_Ja, int64_t ptype,
-          double bandpcrit, double ZM, double kbT, char *solver, int64_t verbose) {
+          double bandpcrit, double ZM, double kbT, char *solver, char *chkfn, int64_t verbose) {
   int res;
   double t0;
   std::string solver_str = solver;
+  std::string chkfn_str = chkfn;
   t0 = get_wtime();
   
   MESingle *me = new MESingle();
@@ -148,6 +151,7 @@ int solve(int64_t nsiz, int64_t neig, double *vals, double *z,
   if (verbose > 0) { cout << "solve: initialized. " << fmt_elapsed(t0) << endl; }
   
   if ((res = me->set_solver(solver_str)) < 0) { delete me; return res; }
+  if ((res = me->set_chkfn(chkfn_str)) < 0) { delete me; return res; }
   
   me->set_ka(ka);
   me->set_sa(rhoa, Ea, kbT);
@@ -187,12 +191,13 @@ int solve_mw(int64_t nwell, int64_t *nsiz, int64_t neig, double *vals, double *z
              double *y_e, double *y_J, double *ainv_ea, double *ainv_Ja, int64_t *ptype,
              int64_t nkisom, double *kisom, int64_t *kisom_i, int64_t *kisom_j,
              double *bandpcrit, double *ZM, double kbT,
-             char *solver, int64_t reactant, int64_t verbose) {
+             char *solver, int64_t reactant, char *chkfn, int64_t verbose) {
   int res;
   int64_t iwell, pos=0;
   MESingle *me1;
   double t0;
   std::string solver_str = solver;
+  std::string chkfn_str = chkfn;
   t0 = get_wtime();
   
   MEMulti *multi = new MEMulti();
@@ -200,7 +205,8 @@ int solve_mw(int64_t nwell, int64_t *nsiz, int64_t neig, double *vals, double *z
   
   if ((res = multi->init(nwell)) < 0) { delete multi; return res; }
   if ((res = multi->set_solver(solver_str)) < 0) { delete multi; return res; }
-  
+  if ((res = multi->set_chkfn(chkfn_str)) < 0) { delete multi; return res; }
+
   for (iwell=0; iwell<nwell; iwell++) {
     me1 = &(multi->wells[iwell]);
     if (iwell == 0) { pos = 0; }
@@ -248,7 +254,7 @@ int solve_mw(int64_t nwell, int64_t *nsiz, int64_t neig, double *vals, double *z
   
   if ((res = multi->post_set_wells()) < 0) { delete multi; return res; }
   if ((res = multi->set_kisom(nkisom, kisom, kisom_i, kisom_j)) < 0) { delete multi; return res; }
-  if (multi->me_type == multi->MWDens) {
+  if (multi->me_type == multi->Dens) {
     if ((res = multi->set_full_matrix()) < 0) { delete multi; return res; }
   }
   

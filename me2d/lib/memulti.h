@@ -44,7 +44,7 @@ public:
   int post_set_wells();
   // set_kisom: call after post_set_wells
   int set_kisom(int64_t nkisom_, double *kisom_, int64_t *kisom_i_, int64_t *kisom_j_);
-  // set_full_matrix: (if me_type == MWDens) call after set_kisom
+  // set_full_matrix: (if me_type == Dens) call after set_kisom
   int set_full_matrix();
   // set_reactant: for inviter;  call after post_set_wells
   int set_reactant(int64_t reactant);

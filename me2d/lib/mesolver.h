@@ -3,6 +3,8 @@
 
 #include "defs.h"
 #include <iostream>
+#include <sstream>
+#include <fstream>
 #include <string>
 #include <cmath>
 #include <new>
@@ -13,15 +15,16 @@ public:
   static int64_t max_array_size;
   static int64_t total_array_size;
   static int64_t total_array_size_used;
-  enum me_type_t { Dens = 1, Band = 2, MW = 11, MWDens = Dens } me_type;
+  enum me_type_t { Dens = 1, Band = 2, MW = 11 } me_type;
   enum solver_t { InvIter = 1, EigIter = 2, Eigen = 3, LinEq = 4 } solver;
   enum linear_solver_t { LsCHO = 1, LsLU = 2, LsLDLT = 3, LsCG = 11 } linear_solver;
   enum eigen_solver_t { EsDSYEVR = 1 } eigen_solver;
+  enum chk_mode_t { ChkNone = 0, ChkSave = 1, ChkLoad = 2 } chk_mode;
   enum precond_t { PcDiag = 1, PcBand = 2 } preconditioner;
   enum {
     ErrAlloc = -1, ErrMaxMem = -2,
     ErrSolver = -11, ErrMaxIter = -21, ErrLapack = -31,
-    ErrCGMaxIter = -41, ErrArpack = -51,
+    ErrCGMaxIter = -41, ErrArpack = -51, ErrChk = -61,
   };
   int64_t InvIter_MaxIter;
   double InvIter_RTol;
@@ -35,6 +38,7 @@ public:
   int64_t nsiz, bwidth;
   double Pc_RelB;
   int64_t Pc_bwidth;
+  std::string chkfn;
   int64_t verbose;
   double *U; int64_t U_size; // ME matrix (except for MW)
   double *ka; int64_t ka_size; // k(E)
@@ -42,6 +46,7 @@ public:
   double *source; int64_t source_size; // source vector for specifing reactant in MW InvIter
 private: // work arrays for linear solvers
   lapack_int *ipiv; int64_t ipiv_size;  // for LU and LDLT
+  double *dwork_chk; int64_t dwork_chk_size; // for ChkSave/Load
   double *dwork_cg; int64_t dwork_cg_size;  // for CG
   quad_float *qwork_cg; int64_t qwork_cg_size;  // for CG semiquad
   double *dwork_pc; int64_t dwork_pc_size;  // for precond
@@ -49,7 +54,7 @@ private: // work arrays for linear solvers
 public:
   MESolver()
        : me_type(Dens), solver(InvIter), linear_solver(LsCHO), eigen_solver(EsDSYEVR),
-         preconditioner(PcBand),
+         chk_mode(ChkNone), preconditioner(PcBand),
          InvIter_MaxIter(100), InvIter_RTol(1e-6), InvIter_RTol_Norm(1e-4), InvIter_FAcc(10.),
          Arpack_MaxIter(100), Arpack_Tol(1e-6),
          CG_MaxIter(2000), CG_RTol(1e-12), CG_RTol_Semiquad(-1.), CG_guess_stored(0),
@@ -59,6 +64,7 @@ public:
          U(nullptr), U_size(0), ka(nullptr), ka_size(0),
          sa(nullptr), sa_size(0), source(nullptr), source_size(0),
          ipiv(nullptr), ipiv_size(0),
+         dwork_chk(nullptr), dwork_chk_size(0),
          dwork_cg(nullptr), dwork_cg_size(0),
          qwork_cg(nullptr), qwork_cg_size(0),
          dwork_pc(nullptr), dwork_pc_size(0) {}
@@ -68,6 +74,7 @@ public:
     delete_array(sa, sa_size);
     delete_array(source, source_size);
     delete_array(ipiv, ipiv_size);
+    delete_array(dwork_chk, dwork_chk_size);
     delete_array(dwork_cg, dwork_cg_size);
     delete_array(qwork_cg, qwork_cg_size);
     delete_array(dwork_pc, dwork_pc_size);
@@ -76,6 +83,7 @@ public:
   static void show_solvers();
   int set_solver(std::string solver_str);
   int set_solver_option(std::string option_str);
+  int set_chkfn(std::string chkfn_str);
   int solve(int64_t neig, double *vals, double *z);
 
   // virtual functions
@@ -95,6 +103,8 @@ private:
   int linear_equation(double &val, double *ga);
   
   int linear_solver_init();
+  int linear_solver_save_chk();
+  int linear_solver_load_chk();
   int linear_solver_solve(double *b);
   void linear_solver_clear();
 
