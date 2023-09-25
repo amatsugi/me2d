@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-__version__ = "2023.03.22"
+__version__ = "2023.09.25"
 
 from .rovib import RoVib
 from .rovib import read_rovib_gaussian

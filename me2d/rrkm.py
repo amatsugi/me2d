@@ -470,7 +470,7 @@ def vrrkmEJ(maxE, dE, maxJ, rovibm, rovibcl, E0l, deltaH0l, rotB2Dprodl, rcoordl
     return offsetl, rhol, kvl, rvl
 
 
-def ilt(maxE, dE, rovibm, ilt_A, ilt_E, convK=True, convJ=True,
+def ilt(maxE, dE, rovibm, ilt_A, ilt_E, convK=True, convJ=True, centcorr=False,
         dEint=1, outf=sys.stdout):
     """ ILT: k(T) = A exp(-Ea/RT) => k(E) = A rho(E-Ea) / rho(E) """
     if outf is None: ofp = None
@@ -483,12 +483,20 @@ def ilt(maxE, dE, rovibm, ilt_A, ilt_E, convK=True, convJ=True,
         ofp.write("# reactant:\n")
         rovibm.write_to(ofp, prefix="#   ")
         ofp.write("# ILT calculation:\n")
-        ofp.write("#   convK, convJ = %s, %s\n" % (convK, convJ))
         ofp.write("#   A = %g\n" % (ilt_A))
         ofp.write("#   E = %g\n" % (ilt_E))
+        ofp.write("#   convK, convJ = %s, %s\n" % (convK, convJ))
+        if (not convJ) and centcorr: 
+            ofp.write("#   rho devided by B**(dim/2)\n")
+        ofp.write("#   nbin, dE = %d, %g\n" % (nbin, dE))
         ofp.write("#   nchan = %d\n" % (nchan))
     
     rho = rovibm.dens(nbin, dE, convK=convK, convJ=convJ, dEint=dEint)
+    
+    if (not convJ) and centcorr:  # devide rho by B**(dim/2)
+        if centcorr is True: pwr = 1. # default is 2D
+        else: pwr = 0.5*centcorr # centcorr is dimension
+        rho /= rovibm.rotB2D**pwr  # nsym is already accounted for in mod_bs
     
     iE = int(ilt_E / dE)
     k = np.zeros(nbin)
