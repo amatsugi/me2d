@@ -1,0 +1,739 @@
+me2d ver. 2023.09.25
+
+================================
+Objects defined in me2d.rovib
+================================
+
+[me2d.RoVib]
+class RoVib(builtins.object)
+ |  me2d.RoVib(nsym=1, rotA=None, rotB2D=None, freq=None, fscale=None, introt=None, states=None, freqimg=None)
+ |  
+ |  Rovibrational properties of molecule
+ |  
+ |  Methods defined here:
+ |  
+ |  __init__(self, nsym=1, rotA=None, rotB2D=None, freq=None, fscale=None, introt=None, states=None, freqimg=None)
+ |      Rovibrational properties of molecule
+ |      nsym: symmetry number
+ |      rotA: rot. const. for active 1D rotor [cm^-1]
+ |      rotB2D: rot. const. for 2D J-rotor [cm^-1]
+ |      freq: list of frequencies [cm^-1]
+ |      fscale: frequency scaling factor
+ |      introt: internal rotor specification given as [(B, sig, hofreq, V0), ...]
+ |              - B: rotational constant in cm^-1
+ |              - sig: symmetry number
+ |              - hofreq: harmonic frequency cm^-1 (set 0 for free rotor)
+ |              - V0: rotational barrier height in cm^-1 (set V0<0 to estimate V0 from hofreq)
+ |      states: states [(degen, energy), ....]  (energy in cm^-1)
+ |              (None for single state)
+ |      freqimg: imaginary freq for TS [cm^-1]
+ |  
+ |  __str__(self)
+ |      Return str(self).
+ |  
+ |  dens(self, nbin, dE, convK=True, convJ=True, dEint=1)
+ |      rovibrational density of state
+ |  
+ |  dump(self, prefix=None, append_comma=False, addinfo=None)
+ |      dump rovibrational properties
+ |  
+ |  findrot(self, convK=True, convJ=True)
+ |      set internal rotation properties
+ |  
+ |  part(self, T, convK=True, convJ=True)
+ |      rovibrational partition function
+ |  
+ |  sums(self, nbin, dE, convK=True, convJ=True, dEint=1)
+ |      rovibrational sum of states
+ |  
+ |  write_to(self, outf=None, prefix=None, append_comma=False, addinfo=None)
+ |      write rovibrational properties
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors defined here:
+ |  
+ |  __dict__
+ |      dictionary for instance variables (if defined)
+ |  
+ |  __weakref__
+ |      list of weak references to the object (if defined)
+
+[me2d.read_rovib_gaussian]
+read_rovib_gaussian(fn)
+    Read rovibrational properties from gaussian output file
+
+[me2d.read_rovib_gpo]
+read_rovib_gpo(fn)
+    Read rovibrational properties from a GPOP (.gpo) file
+
+[me2d.read_rovib]
+read_rovib(fn)
+    Read rovibrational properties from a file
+
+[me2d.equilibrium_consts]
+equilibrium_consts(T, rovib_reac, rovib_prod, deltaH0)
+    Equilibrium constants for unimolecular reactant and product
+
+[me2d.equilibrium_consts_dissoc]
+equilibrium_consts_dissoc(T, rovib_reac, rovib_prod1, rovib_prod2, gelec_reac, gelec_prod1, gelec_prod2, wt_or_name_prod1, wt_or_name_prod2, deltaH0)
+    Equilibrium constants for unimolecular reactant and bimolecular products, A => B + C.
+    wt_or_name_prod[12]: molecular weight [amu] or formula of B and C
+    gelec_[reac|prod[12]]: electronic degeneracy of A, B and C
+
+
+================================
+Objects defined in me2d.rotconst
+================================
+
+[me2d.read_geom_xyzfile]
+read_geom_xyzfile(xyzfn)
+    Read molecular geometry from a xyz-format file
+
+[me2d.read_geom_xyzstr]
+read_geom_xyzstr(s)
+    Read molecular geometry from a string in xyz-format
+
+[me2d.read_geom_gaussian]
+read_geom_gaussian(fn)
+    Read molecular geometry from gaussian output file
+
+[me2d.read_geom]
+read_geom(fn_or_str)
+    Read molecular geometry from a file
+
+[me2d.external_rotc]
+external_rotc(atoms, coordA)
+    rotational constants
+    arguments:
+      atoms: list of atoms
+      coordA: coordinates [len(atoms)][3] in angstroms
+
+[me2d.internal_rotc]
+internal_rotc(atoms, coordA, ipiv, itop, checktop=True)
+    Reduced rotational constant internal rotation
+    [Ref: K.S. Pitzer, J. Chem. Phys. 14 (1946) 239.]
+    arguments:
+      atoms: list of atoms
+      coordA: coordinates [len(atoms)][3] in angstroms
+      ipiv: index (starting from 1) of pivot atom
+      itop: if int: index of pivot atom of the top moiety
+            otherwise: tuple of indexes (starting from 1) of the top moiety
+
+[me2d.find_top]
+find_top(atoms, coordA, ipiv1, ipiv2)
+    find top moiety for ipiv2
+
+[me2d.check_top]
+check_top(atoms, coordA, ipiv, itop)
+    check ipiv and itop
+
+[me2d.suggest_rotatable_bonds]
+suggest_rotatable_bonds(atoms, coordA)
+    suggesting rotational bonds
+
+
+================================
+Objects defined in me2d.rrkm
+================================
+
+[me2d.rrkmE]
+rrkmE(maxE, dE, rovibm, rovibcl, E0l, deltaH0l, convK=True, convJ=True, centcorr=False, dEint=1, klow=2e-99, rho_sums=None, Tl=None, outf=<_io.TextIOWrapper name='<stdout>' mode='w' encoding='cp932'>)
+    1D RRKM calculation
+
+[me2d.rrkmEJ]
+rrkmEJ(maxE, dE, maxJ, rovibm, rovibcl, E0l, deltaH0l, rotB2Dprodl, dEint=1, Tl=None, outf=<_io.TextIOWrapper name='<stdout>' mode='w' encoding='cp932'>, verbose=False)
+    2D RRKM calculation: rho(E,J) and k(E,J)
+
+[me2d.vrrkmE]
+vrrkmE(maxE, dE, rovibm, rovibcl, E0l, deltaH0l, rcoordl, convK=True, convJ=True, centcorr=False, dEint=1, klow=2e-99, rho_sums=None, Tl=None, outf=<_io.TextIOWrapper name='<stdout>' mode='w' encoding='cp932'>, full_output=False)
+    1D variational RRKM calculation
+
+[me2d.vrrkmEJ]
+vrrkmEJ(maxE, dE, maxJ, rovibm, rovibcl, E0l, deltaH0l, rotB2Dprodl, rcoordl, dEint=1, Tl=None, outf=<_io.TextIOWrapper name='<stdout>' mode='w' encoding='cp932'>, full_output=False, verbose=False)
+    2D variational RRKM calculation
+
+[me2d.ilt]
+ilt(maxE, dE, rovibm, ilt_A, ilt_E, convK=True, convJ=True, centcorr=False, dEint=1, outf=<_io.TextIOWrapper name='<stdout>' mode='w' encoding='cp932'>)
+    ILT: k(T) = A exp(-Ea/RT) => k(E) = A rho(E-Ea) / rho(E)
+
+[me2d.rrkmth]
+rrkmth(infn=None, outfn=None, masfn=None)
+    Compatible with the RRKMTH (rev.0.15) program of SSUMES software
+
+[me2d.numrates]
+numrates(T, rho, kEl, Ea)
+    thermal rate constants from rho(E) and l(E)
+
+
+================================
+Objects defined in me2d.tst
+================================
+
+[me2d.tstrates]
+tstrates(T, rovibm, rovibcl, E0l, deltaH0l, convK=True, convJ=True)
+    thermal rate constants for unimolecular reactant from transition state theory
+
+[me2d.cvtrates]
+cvtrates(T, rovibm, rovibcl, E0l, deltaH0l, rcoordl, convK=True, convJ=True)
+    thermal rate constants for unimolecular reactant from canonical variational transition state theory
+
+[me2d.bimol_tstrate]
+bimol_tstrate(T, rovib_reac1, rovib_reac2, rovib_ts, gelec_reac1, gelec_reac2, gelec_ts, wt_or_name_1, wt_or_name_2, E0, deltaH0)
+    thermal rate constant for a bimolecular reaction from transition state theory
+
+
+================================
+Objects defined in me2d.therm
+================================
+
+[me2d.therm]
+therm(T, rovib, gelec, wt_or_name)
+    Calculate DF=H(T)-H0, S(T), and Cp(T),
+    gelec: electronic degeneracy
+    wt_or_name: molecular weight [amu] or formula
+
+[me2d.therm_nasa7fit]
+therm_nasa7fit(T, Cp, H298, S298, midT=1000.0, opt_midT=True, woffT=50.0, verbose=False)
+    Calculate NASA-7 polynomial coefficients.
+
+[me2d.therm_nasa7stat]
+therm_nasa7stat(T, H, S, Cp, lowT, highT, midT, coeffs, verbose=False)
+    Calculate stats (MSD, MAD, RMSD, MAXPOSD, MAXNEGD) of NASA-7 polynomial coefficients
+
+[me2d.therm_nasa7str]
+therm_nasa7str(name, comment, atoms_or_formula, phase, lowT, highT, midT, coeffs)
+    Format NASA-7 polynomial coefficients
+
+
+================================
+Objects defined in me2d.utils
+================================
+
+[me2d.name2weight]
+name2weight(name)
+    moleculer weights [amu] of given molecular formula
+
+[me2d.name2atoms]
+name2atoms(name)
+    list of atoms from given molecular formula
+
+[me2d.fit_arrhenius]
+fit_arrhenius(T, k, mod=True, verbose=False)
+    (modified) Arrhenius fit of rate constant
+
+
+================================
+Objects defined in me2d.collfreq
+================================
+
+[me2d.collfreq_hs]
+collfreq_hs(wt_or_name_1, wt_or_name_2, sigmaA, T)
+    hard-sphere collision frequency [cm^3 molecule^-1 s^-1]
+    arguments:
+      wt_or_name_1, wt_or_name_2: molecular weights [amu] or formula
+      sigmaA: collision diameter [A]
+      T: temperature [K]
+
+[me2d.collfreq_capture]
+collfreq_capture(wt_or_name_1, wt_or_name_2, sigmaA, epsK, T)
+    dispersion capture rate constant [cm^3 molecule^-1 s^-1]
+    [Ref: e.g., A. Matsugi, J. Phys. Chem. A 122 (2018) 1972]
+    arguments:
+      wt_or_name_1, wt_or_name_2: molecular weights [amu] or formula
+      sigmaA: L-J diameter parameter [A]
+      epsK: L-J well depth parameter [K]
+      T: temperature [K]
+
+[me2d.collfreq_lj]
+collfreq_lj(wt_or_name_1, wt_or_name_2, sigmaA, epsK, T)
+    Lennard-Jones collision frequency [cm^3 molecule^-1 s^-1]
+    Collision integral interpolated using the tablulated values.
+    [Ref: M. Klein and F.J. Smith, J Res Natl Bur Stand A Phys Chem.
+          1968 Jul-Aug; 72A(4): 359; doi: 10.6028/jres.072A.033]
+    arguments:
+      wt_or_name_1, wt_or_name_2: molecular weights [amu] or formula
+      sigmaA: L-J diameter parameter [A]
+      epsK: L-J well depth parameter [K]
+      T: temperature [K]
+
+[me2d.collfreq_lj_approx]
+collfreq_lj_approx(wt_or_name_1, wt_or_name_2, sigmaA, epsK, T)
+    Lennard-Jones collision frequency [cm^3 molecule^-1 s^-1]
+    Approximate expression of [Ref: J. Troe, J. Chem. Phys. 66 (1977) 4758].
+    arguments:
+      wt_or_name_1, wt_or_name_2: molecular weights [amu] or formula
+      sigmaA: L-J diameter parameter [A]
+      epsK: L-J well depth parameter [K]
+      T: temperature [K]
+
+
+================================
+Objects defined in me2d.readfile
+================================
+
+[me2d.read1d]
+read1d(fn, maxE=None)
+    read E-resolved rho and k[ch] from rrkmE file (generated by rrkmE())
+
+[me2d.read2d]
+read2d(fn, dJ, maxE=None, maxJ=None)
+    read E,J-resolved rho and k[ch] from rrkmEJ file (generated by rrkmEJ())
+
+[me2d.merge1d]
+merge1d(fn, fn_chl)
+    merge multiple rrkmE files
+    fn: output file name
+    fn_chl: list of tuples (filename, channel_index) for k(E)  (index starts from 1)
+
+[me2d.merge2d]
+merge2d(fn, fn_chl)
+    merge multiple rrkmEJ files
+    fn: output file name
+    fn_chl: list of tuples (filename, channel_index) for k(E,J)  (index starts from 1)
+
+
+================================
+Objects defined in me2d.solverlib
+================================
+
+[me2d.show_solvers]
+show_solvers()
+    show implemented solvers for the master equations
+
+
+================================
+Objects defined in me2d.singlewell
+================================
+
+[me2d.ME1D]
+class ME1D(MEBase)
+ |  me2d.ME1D(dE, rhoa, kl, offset0=None)
+ |  
+ |  1D master equation
+ |  
+ |  Method resolution order:
+ |      ME1D
+ |      MEBase
+ |      builtins.object
+ |  
+ |  Methods defined here:
+ |  
+ |  __init__(self, dE, rhoa, kl, offset0=None)
+ |      arguments: E-resolved rho and k
+ |      dE: scalar
+ |      rhol: rho array
+ |      kl: list(ch) of k arrays
+ |      offset0: offset for E (reserved for multiwell ME)
+ |  
+ |  set_params(self, Z, y_e, a_e)
+ |      set energy transfer parameters
+ |      P(E,E') = C(E') * exp[- (|E-E'|/a_e(E'))^y_e ] for downward transition
+ |      Z: scalar
+ |      y: scalar
+ |      a: scalar(constant value) or callable(function of (E0))
+ |  
+ |  ----------------------------------------------------------------------
+ |  Class methods defined here:
+ |  
+ |  read_from(fn, maxE=None, offset0=None) from builtins.type
+ |      read E-resolved rho and k[ch] from rrkmE file, and return an instance of the class
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from MEBase:
+ |  
+ |  get_channel_strings(self, name='k', unit='s-1')
+ |  
+ |  hpl(self, T)
+ |  
+ |  k_chemical_activation(self, khpl, kcal, kdl)
+ |      phenomenological rate constants for chemical activation reactions
+ |      calculated from steady-state solutions
+ |      [Ref: A. Matsugi and S. Suzuki, Combust. Flame 259 (2024) 113143.]
+ |      khpl: HPL bimolecular rate constant
+ |      kcal: apparent decomposition rate constants in the chemical activation steady state
+ |      kdl: decomposition rate constants
+ |      returns: kr(->recombination), kbl(->bimolecular products)
+ |  
+ |  set_k(self, dens)
+ |      virtual method reserved for strong-collider-in-J model
+ |  
+ |  solve(self, T, p, gguess=None, solver='', bandpcrit=1e-09, neig=1, chemact_ch=None, verbose=False, nthreads=None, maxmemGB=None, chkfn=None)
+ |      solve ME by calling solve1d or solve2d function of the library
+ |      T: temperature in K
+ |      p: pressure in bar
+ |      gguess: initial guess for iterative solver
+ |      solver: see me2d.show_solvers()
+ |      bandpcrit: truncation threshold for banded matrix (None to use dense matrix)
+ |      neig: number of eigenpairs to be computed
+ |      chemact_ch: recombination channel (for chemical activation with solver=LinEq; gguess has to be None)
+ |      verbose: verbose flag (True/False or integer)
+ |      nthreads: number of threads to be used in the computation
+ |      maxmemGB: max memory size used by the solver in GB
+ |      chkfn: file name for storing matrix data (optional; used with the solver options save/load)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors inherited from MEBase:
+ |  
+ |  __dict__
+ |      dictionary for instance variables (if defined)
+ |  
+ |  __weakref__
+ |      list of weak references to the object (if defined)
+
+[me2d.ME1DuJ]
+class ME1DuJ(ME1D)
+ |  me2d.ME1DuJ(dE, Jl, offsetl, rhol, kll)
+ |  
+ |  Microcanonical strong-collider-in-J model
+ |  [Ref: J.A. Miller et al., J. Phys. Chem. A 106 (2002) 4904.]
+ |  
+ |  Method resolution order:
+ |      ME1DuJ
+ |      ME1D
+ |      MEBase
+ |      builtins.object
+ |  
+ |  Methods defined here:
+ |  
+ |  __init__(self, dE, Jl, offsetl, rhol, kll)
+ |      arguments: E,J-resolved rho and k
+ |      dE: scalar
+ |      Jl: list of J; J = Jl[iJ]
+ |      offsetl: list(J) of offset; offset = offsetl[iJ]
+ |      rhol: list(J) of rho arrays, rho = rhol[iJ][:]  (2J+1 degeneracy is included in rho)
+ |      kll: list(ch,J) of k arrays, k = kll[ich][iJ][:]
+ |  
+ |  set_k(self, dens)
+ |      set J-averaged k of microcanonical strong-collider-in-J model
+ |      dens: [M];  None for thermal average
+ |  
+ |  ----------------------------------------------------------------------
+ |  Class methods defined here:
+ |  
+ |  read_from(fn, dJ, maxE=None, maxJ=None) from builtins.type
+ |      read E,J-resolved rho and k[ch] from rrkmEJ file, and return an instance of the class
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from ME1D:
+ |  
+ |  set_params(self, Z, y_e, a_e)
+ |      set energy transfer parameters
+ |      P(E,E') = C(E') * exp[- (|E-E'|/a_e(E'))^y_e ] for downward transition
+ |      Z: scalar
+ |      y: scalar
+ |      a: scalar(constant value) or callable(function of (E0))
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from MEBase:
+ |  
+ |  get_channel_strings(self, name='k', unit='s-1')
+ |  
+ |  hpl(self, T)
+ |  
+ |  k_chemical_activation(self, khpl, kcal, kdl)
+ |      phenomenological rate constants for chemical activation reactions
+ |      calculated from steady-state solutions
+ |      [Ref: A. Matsugi and S. Suzuki, Combust. Flame 259 (2024) 113143.]
+ |      khpl: HPL bimolecular rate constant
+ |      kcal: apparent decomposition rate constants in the chemical activation steady state
+ |      kdl: decomposition rate constants
+ |      returns: kr(->recombination), kbl(->bimolecular products)
+ |  
+ |  solve(self, T, p, gguess=None, solver='', bandpcrit=1e-09, neig=1, chemact_ch=None, verbose=False, nthreads=None, maxmemGB=None, chkfn=None)
+ |      solve ME by calling solve1d or solve2d function of the library
+ |      T: temperature in K
+ |      p: pressure in bar
+ |      gguess: initial guess for iterative solver
+ |      solver: see me2d.show_solvers()
+ |      bandpcrit: truncation threshold for banded matrix (None to use dense matrix)
+ |      neig: number of eigenpairs to be computed
+ |      chemact_ch: recombination channel (for chemical activation with solver=LinEq; gguess has to be None)
+ |      verbose: verbose flag (True/False or integer)
+ |      nthreads: number of threads to be used in the computation
+ |      maxmemGB: max memory size used by the solver in GB
+ |      chkfn: file name for storing matrix data (optional; used with the solver options save/load)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors inherited from MEBase:
+ |  
+ |  __dict__
+ |      dictionary for instance variables (if defined)
+ |  
+ |  __weakref__
+ |      list of weak references to the object (if defined)
+
+[me2d.ME2D]
+class ME2D(MEBase)
+ |  me2d.ME2D(dE, B2D, Jl, offsetl, rhol, kll, offset0=None)
+ |  
+ |  2D master equation
+ |  
+ |  Method resolution order:
+ |      ME2D
+ |      MEBase
+ |      builtins.object
+ |  
+ |  Methods defined here:
+ |  
+ |  __init__(self, dE, B2D, Jl, offsetl, rhol, kll, offset0=None)
+ |      arguments: E,J-resolved rho and k
+ |      dE: scalar, energy grain size
+ |      B2D: scalar, B2D of reactant
+ |      Jl: list of J; J = Jl[iJ]
+ |      offsetl: list(J) of offset; offset = offsetl[iJ]
+ |      rhol: list(J) of rho arrays, rho = rhol[iJ][:]  (2J+1 degeneracy is included in rho)
+ |      kll: list(ch,J) of k arrays, k = kll[ich][iJ][:]
+ |      offset0: offset for E (reserved for multiwell ME)
+ |  
+ |  set_params(self, Z, y_e, y_J, a_e, a_J)
+ |      set collisional transition parameters
+ |      P(E,J;E',J') = C(E',J') * [S(E,J)/S(E',J')] * F_s(E,J;E',J')
+ |      F_s = exp[-(|eps-eps'|/a_e(E',J'))^y_e] * exp[-(|J-J'|/a_J(E',J'))^y_J]
+ |      See [Ref: A. Matsugi, J. Phys. Chem. A 124 (2020) 6645]
+ |      Z: scalar
+ |      y: scalar
+ |      a: scalar(constant value) or callable(function of (E0,J0))
+ |  
+ |  ----------------------------------------------------------------------
+ |  Class methods defined here:
+ |  
+ |  read_from(fn, dJ, maxE=None, maxJ=None, offset0=None) from builtins.type
+ |      read E,J-resolved rho and k[ch] from rrkmEJ file, and return an instance of the class
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from MEBase:
+ |  
+ |  get_channel_strings(self, name='k', unit='s-1')
+ |  
+ |  hpl(self, T)
+ |  
+ |  k_chemical_activation(self, khpl, kcal, kdl)
+ |      phenomenological rate constants for chemical activation reactions
+ |      calculated from steady-state solutions
+ |      [Ref: A. Matsugi and S. Suzuki, Combust. Flame 259 (2024) 113143.]
+ |      khpl: HPL bimolecular rate constant
+ |      kcal: apparent decomposition rate constants in the chemical activation steady state
+ |      kdl: decomposition rate constants
+ |      returns: kr(->recombination), kbl(->bimolecular products)
+ |  
+ |  set_k(self, dens)
+ |      virtual method reserved for strong-collider-in-J model
+ |  
+ |  solve(self, T, p, gguess=None, solver='', bandpcrit=1e-09, neig=1, chemact_ch=None, verbose=False, nthreads=None, maxmemGB=None, chkfn=None)
+ |      solve ME by calling solve1d or solve2d function of the library
+ |      T: temperature in K
+ |      p: pressure in bar
+ |      gguess: initial guess for iterative solver
+ |      solver: see me2d.show_solvers()
+ |      bandpcrit: truncation threshold for banded matrix (None to use dense matrix)
+ |      neig: number of eigenpairs to be computed
+ |      chemact_ch: recombination channel (for chemical activation with solver=LinEq; gguess has to be None)
+ |      verbose: verbose flag (True/False or integer)
+ |      nthreads: number of threads to be used in the computation
+ |      maxmemGB: max memory size used by the solver in GB
+ |      chkfn: file name for storing matrix data (optional; used with the solver options save/load)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors inherited from MEBase:
+ |  
+ |  __dict__
+ |      dictionary for instance variables (if defined)
+ |  
+ |  __weakref__
+ |      list of weak references to the object (if defined)
+
+
+================================
+Objects defined in me2d.multiwell
+================================
+
+[me2d.ME1DMW]
+class ME1DMW(MEBaseMW)
+ |  me2d.ME1DMW(names, wells, connections)
+ |  
+ |  multiple-well 1D master equation
+ |  
+ |  Method resolution order:
+ |      ME1DMW
+ |      MEBaseMW
+ |      builtins.object
+ |  
+ |  Methods defined here:
+ |  
+ |  __init__(self, names, wells, connections)
+ |      names: list of well names
+ |      wells: list of ME1D objects
+ |      connections: list of isomerization channels ((well_name, ichan), (well_name, ichan))
+ |                   (note: channel index starts from 1)
+ |  
+ |  set_kisom(self, iwell1, ich1, iwell2, ich2)
+ |      virtual method
+ |  
+ |  ----------------------------------------------------------------------
+ |  Class methods defined here:
+ |  
+ |  read_from(well_list, connections, maxE=None) from builtins.type
+ |      read well_list and return an instance of the class
+ |      arguments:
+ |        well_list: list of tuple (well_name, rrkm_file, relative_energy)
+ |        connections: list of isomerization channels ((well_name, ichan), (well_name, ichan))
+ |                     (note: channel index starts from 1)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from MEBaseMW:
+ |  
+ |  __getitem__(self, name)
+ |      returns well object
+ |  
+ |  get_channel_strings(self)
+ |  
+ |  get_channel_strings_phnm(self)
+ |  
+ |  get_channel_strings_phnm_ca(self, chemact_well_ch)
+ |  
+ |  hpl(self, T)
+ |  
+ |  kphnm_from_cass(self, khpl, kl, popl, kdl, kwl)
+ |      phenomenological rate constants from chemical activation steady-state solution
+ |      [Ref: A. Matsugi and S. Suzuki, Combust. Flame 259 (2024) 113143.]
+ |      khpl: HPL bimolecular rate constant
+ |      kl: channel-specific apparent decomposition rate constants in
+ |          the chemical activation steady state
+ |      popl: steady-state populations during the chemical activation steady state
+ |      kdl, kwl: outputs of kphnm_from_ss()
+ |      returns lists of the rate constants for reactant-to-well and reactant-to-fragments,
+ |      krl and kbl, corresponding to krstrl and kbstrl, respectively, of the
+ |      get_channel_strings_phnm_ca() method
+ |  
+ |  kphnm_from_ss(self, kll, popll)
+ |      phenomenological rate constants from steady-state solutions
+ |      [Ref: A. Matsugi and S. Suzuki, Combust. Flame 259 (2024) 113143.]
+ |      kll: channel-specific overall decomposition rate constants in
+ |           the steady-state decomposition of wells
+ |      popll: steady-state populations during the steady-state
+ |             decomposition of wells
+ |      returns lists of the rate constants for dissociation and isomerization,
+ |      kdl and kwl, corresponding to kdstrl and kwstrl, respectively, of the
+ |      get_channel_strings_phnm() method
+ |  
+ |  set_channels(self)
+ |  
+ |  solve(self, T, p, gguess=None, solver='', bandpcrit=1e-09, neig=1, reactant=None, chemact_well_ch=None, verbose=False, nthreads=None, maxmemGB=None, chkfn=None)
+ |      solve ME by calling solve1d or solve2d function of the library
+ |      T: temperature in K
+ |      p: pressure in bar
+ |      gguess: initial guess for iterative solver
+ |      solver: see me2d.show_solvers()
+ |      bandpcrit: truncation threshold for banded matrix (None to use dense matrix)
+ |      neig: number of eigenpairs to be computed
+ |      reactant: name of the reactant well (only for InvIter solver for strady-state decomposition)
+ |      chemact_well_ch: recombination (well-name, channel) (for chemical activation with solver=LinEq; gguess has to be None)
+ |      verbose: verbose flag (True/False or integer)
+ |      nthreads: number of threads to be used in the computation
+ |      maxmemGB: max memory size used by the solver in GB
+ |      chkfn: file name for storing matrix data (optional; used with the solver options save/load)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors inherited from MEBaseMW:
+ |  
+ |  __dict__
+ |      dictionary for instance variables (if defined)
+ |  
+ |  __weakref__
+ |      list of weak references to the object (if defined)
+
+[me2d.ME2DMW]
+class ME2DMW(MEBaseMW)
+ |  me2d.ME2DMW(names, wells, connections)
+ |  
+ |  multiple-well 2D master equation
+ |  
+ |  Method resolution order:
+ |      ME2DMW
+ |      MEBaseMW
+ |      builtins.object
+ |  
+ |  Methods defined here:
+ |  
+ |  __init__(self, names, wells, connections)
+ |      names: list of well names
+ |      wells: list of ME2D objects
+ |      connections: list of isomerization channels ((well_name, ichan), (well_name, ichan))
+ |                   (note: channel index starts from 1)
+ |  
+ |  set_kisom(self, iwell1, ich1, iwell2, ich2)
+ |      virtual method
+ |  
+ |  ----------------------------------------------------------------------
+ |  Class methods defined here:
+ |  
+ |  read_from(well_list, connections, dJ, maxE=None, maxJ=None) from builtins.type
+ |      read well_list and return an instance of the class
+ |      arguments:
+ |        well_list: list of tuple (well_name, rrkmEJ_file, relative_energy)
+ |        connections: list of isomerization channels ((well_name, ichan), (well_name, ichan))
+ |                     (note: channel index starts from 1)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from MEBaseMW:
+ |  
+ |  __getitem__(self, name)
+ |      returns well object
+ |  
+ |  get_channel_strings(self)
+ |  
+ |  get_channel_strings_phnm(self)
+ |  
+ |  get_channel_strings_phnm_ca(self, chemact_well_ch)
+ |  
+ |  hpl(self, T)
+ |  
+ |  kphnm_from_cass(self, khpl, kl, popl, kdl, kwl)
+ |      phenomenological rate constants from chemical activation steady-state solution
+ |      [Ref: A. Matsugi and S. Suzuki, Combust. Flame 259 (2024) 113143.]
+ |      khpl: HPL bimolecular rate constant
+ |      kl: channel-specific apparent decomposition rate constants in
+ |          the chemical activation steady state
+ |      popl: steady-state populations during the chemical activation steady state
+ |      kdl, kwl: outputs of kphnm_from_ss()
+ |      returns lists of the rate constants for reactant-to-well and reactant-to-fragments,
+ |      krl and kbl, corresponding to krstrl and kbstrl, respectively, of the
+ |      get_channel_strings_phnm_ca() method
+ |  
+ |  kphnm_from_ss(self, kll, popll)
+ |      phenomenological rate constants from steady-state solutions
+ |      [Ref: A. Matsugi and S. Suzuki, Combust. Flame 259 (2024) 113143.]
+ |      kll: channel-specific overall decomposition rate constants in
+ |           the steady-state decomposition of wells
+ |      popll: steady-state populations during the steady-state
+ |             decomposition of wells
+ |      returns lists of the rate constants for dissociation and isomerization,
+ |      kdl and kwl, corresponding to kdstrl and kwstrl, respectively, of the
+ |      get_channel_strings_phnm() method
+ |  
+ |  set_channels(self)
+ |  
+ |  solve(self, T, p, gguess=None, solver='', bandpcrit=1e-09, neig=1, reactant=None, chemact_well_ch=None, verbose=False, nthreads=None, maxmemGB=None, chkfn=None)
+ |      solve ME by calling solve1d or solve2d function of the library
+ |      T: temperature in K
+ |      p: pressure in bar
+ |      gguess: initial guess for iterative solver
+ |      solver: see me2d.show_solvers()
+ |      bandpcrit: truncation threshold for banded matrix (None to use dense matrix)
+ |      neig: number of eigenpairs to be computed
+ |      reactant: name of the reactant well (only for InvIter solver for strady-state decomposition)
+ |      chemact_well_ch: recombination (well-name, channel) (for chemical activation with solver=LinEq; gguess has to be None)
+ |      verbose: verbose flag (True/False or integer)
+ |      nthreads: number of threads to be used in the computation
+ |      maxmemGB: max memory size used by the solver in GB
+ |      chkfn: file name for storing matrix data (optional; used with the solver options save/load)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors inherited from MEBaseMW:
+ |  
+ |  __dict__
+ |      dictionary for instance variables (if defined)
+ |  
+ |  __weakref__
+ |      list of weak references to the object (if defined)
+

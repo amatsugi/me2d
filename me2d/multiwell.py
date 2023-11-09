@@ -183,6 +183,7 @@ class MEBaseMW(object):
 
     def kphnm_from_ss(self, kll, popll):
         """ phenomenological rate constants from steady-state solutions
+        [Ref: A. Matsugi and S. Suzuki, Combust. Flame 259 (2024) 113143.]
         kll: channel-specific overall decomposition rate constants in
              the steady-state decomposition of wells
         popll: steady-state populations during the steady-state
@@ -248,6 +249,7 @@ class MEBaseMW(object):
     
     def kphnm_from_cass(self, khpl, kl, popl, kdl, kwl):
         """ phenomenological rate constants from chemical activation steady-state solution
+        [Ref: A. Matsugi and S. Suzuki, Combust. Flame 259 (2024) 113143.]
         khpl: HPL bimolecular rate constant
         kl: channel-specific apparent decomposition rate constants in
             the chemical activation steady state

@@ -19,30 +19,40 @@ class RoVib(object):
     
     def __init__(self, nsym=1, rotA=None, rotB2D=None, freq=None, fscale=None,
                  introt=None, states=None, freqimg=None):
-        self.nsym = nsym     # symmetry number
-        self.rotA = rotA     # rot. const. for active 1D rotor [cm^-1]
-        self.rotB2D = rotB2D # rot. const. for 2D J-rotor [cm^-1]
+        """ Rovibrational properties of molecule
+        nsym: symmetry number
+        rotA: rot. const. for active 1D rotor [cm^-1]
+        rotB2D: rot. const. for 2D J-rotor [cm^-1]
+        freq: list of frequencies [cm^-1]
+        fscale: frequency scaling factor
+        introt: internal rotor specification given as [(B, sig, hofreq, V0), ...]
+                - B: rotational constant in cm^-1
+                - sig: symmetry number
+                - hofreq: harmonic frequency cm^-1 (set 0 for free rotor)
+                - V0: rotational barrier height in cm^-1 (set V0<0 to estimate V0 from hofreq)
+        states: states [(degen, energy), ....]  (energy in cm^-1)
+                (None for single state)
+        freqimg: imaginary freq for TS [cm^-1]
+        """
+        self.nsym = nsym
+        self.rotA = rotA
+        self.rotB2D = rotB2D
 
-        # list of frequencies [cm^-1] and scaling factor
         if freq is None: self.freq = []
         else: self.freq = freq
         if fscale is None: self.fscale = 1.
         else: self.fscale = fscale
 
-        # internal rotor [(B, sig, hofreq, V0), ...] (B, hofreq, V0 in cm^-1)
-        # set hofreq=0 for free rotor
-        # set V0<0 to estimate V0 from hofreq
         if introt is None: self.introt = []
         else: self.introt = introt
 
-        # states [(degen, energy), ....]  (energy in cm^-1)
-        # None for single state
         if states is None: self.states = [(1, 0.)]
         else: self.states = states
         
-        self.freqimg = freqimg  # imaginary freq for TS [cm^-1]
+        self.freqimg = freqimg
     
     def findrot(self, convK=True, convJ=True):
+        """ set internal rotation properties """
         freerot = []  # [(B, sigma, dimen), ...]
         hindrot = []  # [(B, sigma, hofreq, V0), ...]
         if convK and (self.rotA is not None):
@@ -60,18 +70,21 @@ class RoVib(object):
         return freerot, hindrot
     
     def dens(self, nbin, dE, convK=True, convJ=True, dEint=1):
+        """ rovibrational density of state """
         freerot, hindrot = self.findrot(convK, convJ)
         freq  = [x*self.fscale for x in self.freq]
         return mod_bs(nbin, dE, self.nsym, freq, freerot, hindrot,
                       self.states, issum=False, dEint=dEint)
     
     def sums(self, nbin, dE, convK=True, convJ=True, dEint=1):
+        """ rovibrational sum of states """
         freerot, hindrot = self.findrot(convK, convJ)
         freq  = [x*self.fscale for x in self.freq]
         return mod_bs(nbin, dE, self.nsym, freq, freerot, hindrot,
                       self.states, issum=True, dEint=dEint)
 
     def part(self, T, convK=True, convJ=True):
+        """ rovibrational partition function """
         freerot, hindrot = self.findrot(convK, convJ)
         freq  = [x*self.fscale for x in self.freq]
         return partfunc_rv(T, self.nsym, freq, freerot, hindrot,
@@ -81,11 +94,13 @@ class RoVib(object):
         return self.dump()
 
     def dump(self, prefix=None, append_comma=False, addinfo=None):
+        """ dump rovibrational properties """
         outf = StringIO()
         self.write_to(outf=outf, prefix=prefix, append_comma=append_comma, addinfo=addinfo)
         return outf.getvalue()
 
     def write_to(self, outf=None, prefix=None, append_comma=False, addinfo=None):
+        """ write rovibrational properties """
         if outf is None: fp = sys.stdout
         elif hasattr(outf, "write"): fp = outf
         else: fp = open(outf, "w")
@@ -444,6 +459,7 @@ def read_rovib_gpo(fn):
 
 
 def read_rovib(fn):
+    """ Read rovibrational properties from a file """
     if not os.path.exists(fn):
         raise ValueError("# %s: file not exist." % (fn))
     if fn.endswith(".gpo"):

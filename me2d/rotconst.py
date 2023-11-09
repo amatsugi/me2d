@@ -226,6 +226,7 @@ def check_top(atoms, coordA, ipiv, itop):
 
 
 def suggest_rotatable_bonds(atoms, coordA):
+    """ suggesting rotational bonds """
     coordA = [np.array(x) for x in coordA]
     n = len(coordA)
     bmat = np.zeros((n, n))
@@ -260,6 +261,7 @@ def suggest_rotatable_bonds(atoms, coordA):
 
 
 def read_geom_xyzfile(xyzfn):
+    """ Read molecular geometry from a xyz-format file """
     fp = open(xyzfn)
     natoms = int(next(fp).strip())
     title = next(fp).rstrip()
@@ -276,6 +278,7 @@ def read_geom_xyzfile(xyzfn):
 
 
 def read_geom_xyzstr(s):
+    """ Read molecular geometry from a string in xyz-format """
     s = s.strip().splitlines()
     natoms = int(s[0].strip())
     title = s[1].rstrip()
@@ -291,6 +294,7 @@ def read_geom_xyzstr(s):
 
 
 def read_geom_gaussian(fn):
+    """ Read molecular geometry from gaussian output file """
     fp = open(fn)
     atoms = None
     coordA = None
@@ -311,6 +315,7 @@ def read_geom_gaussian(fn):
     
 
 def read_geom(fn_or_str):
+    """ Read molecular geometry from a file """
     if os.path.exists(fn_or_str):
         if fn_or_str.endswith(".xyz"):
             return read_geom_xyzfile(fn_or_str)

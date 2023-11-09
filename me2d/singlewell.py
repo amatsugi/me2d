@@ -42,6 +42,7 @@ class MEBase(object):
     def k_chemical_activation(self, khpl, kcal, kdl):
         """ phenomenological rate constants for chemical activation reactions
         calculated from steady-state solutions
+        [Ref: A. Matsugi and S. Suzuki, Combust. Flame 259 (2024) 113143.]
         khpl: HPL bimolecular rate constant
         kcal: apparent decomposition rate constants in the chemical activation steady state
         kdl: decomposition rate constants

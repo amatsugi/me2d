@@ -85,6 +85,7 @@ def load_library(libname="libme2d"):
 
 
 def show_solvers():
+    """ show implemented solvers for the master equations """
     lib, libfn = load_library()
     lib.show_solvers()
     return
